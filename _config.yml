@@ -109,8 +109,8 @@ analytics:
 author:
   name             : "Eunsoo Kim"
   avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "I am an  person."
-  location         : "Suwon, SouthKorea"
+  bio              : "front-end develper want to be full stack"
+  location         : "Suwon, South Korea"
   email            : "kimessu@gmail.com"
   links:
     - label: "Email"
