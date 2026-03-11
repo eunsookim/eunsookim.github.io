@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Loader2, Save, Send } from "lucide-react";
+import { Languages, Loader2, Save, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import type { Post, Category, Series } from "@/lib/types";
@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { PostMetaBar } from "@/components/admin/post-meta-bar";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 // MDEditor uses browser APIs, so we must load it client-side only
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
@@ -45,6 +46,9 @@ interface DraftState {
   seriesOrder: number | null;
   tags: string[];
   coverImage: string | null;
+  titleEn: string;
+  excerptEn: string;
+  contentEn: string;
   savedAt: string;
 }
 
@@ -80,6 +84,12 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
   const [coverImage, setCoverImage] = useState<string | null>(
     post?.cover_image ?? null,
   );
+
+  const [titleEn, setTitleEn] = useState(post?.title_en ?? "");
+  const [excerptEn, setExcerptEn] = useState(post?.excerpt_en ?? "");
+  const [contentEn, setContentEn] = useState(post?.content_en ?? "");
+  const [translating, setTranslating] = useState(false);
+  const [editorTab, setEditorTab] = useState<"ko" | "en">("ko");
 
   const [saving, setSaving] = useState(false);
   const [autoSavedAt, setAutoSavedAt] = useState<string | null>(null);
@@ -118,6 +128,43 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
     isDirty.current = true;
   }, []);
 
+  // ------ Translation ------
+  const handleTranslate = useCallback(async () => {
+    if (!title.trim() && !content.trim()) {
+      toast.error("번역할 한국어 콘텐츠가 없습니다.");
+      return;
+    }
+
+    setTranslating(true);
+    try {
+      const texts = [title, excerpt, content].filter(Boolean);
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texts }),
+      });
+
+      if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error || "Translation failed");
+      }
+
+      const { translations } = await res.json();
+      let idx = 0;
+      if (title) setTitleEn(translations[idx++]);
+      if (excerpt) setExcerptEn(translations[idx++]);
+      if (content) setContentEn(translations[idx++]);
+
+      setEditorTab("en");
+      toast.success("번역 완료. 영어 탭에서 확인/교정하세요.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "번역에 실패했습니다.";
+      toast.error(message);
+    } finally {
+      setTranslating(false);
+    }
+  }, [title, excerpt, content]);
+
   // ------ Restore draft from localStorage on mount ------
   useEffect(() => {
     const key = draftKey(post?.id);
@@ -140,6 +187,9 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
         setSeriesOrder(draft.seriesOrder);
         setTags(draft.tags);
         setCoverImage(draft.coverImage);
+        if (draft.titleEn !== undefined) setTitleEn(draft.titleEn);
+        if (draft.excerptEn !== undefined) setExcerptEn(draft.excerptEn);
+        if (draft.contentEn !== undefined) setContentEn(draft.contentEn);
         // If slug was set, consider it manually edited
         if (draft.slug) slugManuallyEdited.current = true;
       }
@@ -165,6 +215,9 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
         seriesOrder,
         tags,
         coverImage,
+        titleEn,
+        excerptEn,
+        contentEn,
         savedAt: new Date().toISOString(),
       };
       localStorage.setItem(draftKey(post?.id), JSON.stringify(draft));
@@ -182,6 +235,9 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
     seriesOrder,
     tags,
     coverImage,
+    titleEn,
+    excerptEn,
+    contentEn,
     post?.id,
   ]);
 
@@ -224,6 +280,9 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
           series_order: seriesOrder,
           is_published: publish,
           tags,
+          title_en: titleEn.trim() || null,
+          excerpt_en: excerptEn.trim() || null,
+          content_en: contentEn || null,
           ...(publish && !post?.published_at
             ? { published_at: new Date().toISOString() }
             : {}),
@@ -276,6 +335,9 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
       seriesId,
       seriesOrder,
       tags,
+      titleEn,
+      excerptEn,
+      contentEn,
       post,
       router,
     ],
@@ -288,19 +350,7 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      {/* Title */}
-      <div className="space-y-1.5">
-        <Label htmlFor="post-title">제목</Label>
-        <Input
-          id="post-title"
-          placeholder="게시글 제목"
-          value={title}
-          onChange={(e) => handleTitleChange(e.target.value)}
-          className="h-12 text-lg font-bold"
-        />
-      </div>
-
-      {/* Slug */}
+      {/* Slug (shared, outside tabs) */}
       <div className="space-y-1.5">
         <Label htmlFor="post-slug">슬러그</Label>
         <Input
@@ -312,22 +362,7 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
         />
       </div>
 
-      {/* Excerpt */}
-      <div className="space-y-1.5">
-        <Label htmlFor="post-excerpt">요약</Label>
-        <Textarea
-          id="post-excerpt"
-          placeholder="게시글 요약 (선택)"
-          value={excerpt}
-          onChange={(e) => {
-            setExcerpt(e.target.value);
-            markDirty();
-          }}
-          rows={2}
-        />
-      </div>
-
-      {/* Meta Bar */}
+      {/* Meta Bar (shared, outside tabs) */}
       <PostMetaBar
         categories={categories}
         seriesList={seriesList}
@@ -359,21 +394,113 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
         }}
       />
 
-      {/* Markdown Editor */}
-      <div className="space-y-1.5">
-        <Label>본문</Label>
-        <div data-color-mode={colorMode}>
-          <MDEditor
-            value={content}
-            onChange={(val) => {
-              setContent(val ?? "");
-              markDirty();
-            }}
-            height={500}
-            preview="live"
-          />
+      {/* Content tabs */}
+      <Tabs value={editorTab} onValueChange={(v) => setEditorTab(v as "ko" | "en")}>
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="ko">한국어</TabsTrigger>
+            <TabsTrigger value="en">English</TabsTrigger>
+          </TabsList>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleTranslate}
+            disabled={translating}
+          >
+            {translating ? <Loader2 className="size-4 animate-spin" /> : <Languages className="size-4" />}
+            번역
+          </Button>
         </div>
-      </div>
+
+        <TabsContent value="ko" className="space-y-6">
+          {/* Korean Title */}
+          <div className="space-y-1.5">
+            <Label htmlFor="post-title">제목</Label>
+            <Input
+              id="post-title"
+              placeholder="게시글 제목"
+              value={title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              className="h-12 text-lg font-bold"
+            />
+          </div>
+          {/* Korean Excerpt */}
+          <div className="space-y-1.5">
+            <Label htmlFor="post-excerpt">요약</Label>
+            <Textarea
+              id="post-excerpt"
+              placeholder="게시글 요약 (선택)"
+              value={excerpt}
+              onChange={(e) => {
+                setExcerpt(e.target.value);
+                markDirty();
+              }}
+              rows={2}
+            />
+          </div>
+          {/* Korean Content */}
+          <div className="space-y-1.5">
+            <Label>본문</Label>
+            <div data-color-mode={colorMode}>
+              <MDEditor
+                value={content}
+                onChange={(val) => {
+                  setContent(val ?? "");
+                  markDirty();
+                }}
+                height={500}
+                preview="live"
+              />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="en" className="space-y-6">
+          {/* English Title */}
+          <div className="space-y-1.5">
+            <Label htmlFor="post-title-en">Title (EN)</Label>
+            <Input
+              id="post-title-en"
+              placeholder="Post title (English)"
+              value={titleEn}
+              onChange={(e) => {
+                setTitleEn(e.target.value);
+                markDirty();
+              }}
+              className="h-12 text-lg font-bold"
+            />
+          </div>
+          {/* English Excerpt */}
+          <div className="space-y-1.5">
+            <Label htmlFor="post-excerpt-en">Excerpt (EN)</Label>
+            <Textarea
+              id="post-excerpt-en"
+              placeholder="Post excerpt (optional)"
+              value={excerptEn}
+              onChange={(e) => {
+                setExcerptEn(e.target.value);
+                markDirty();
+              }}
+              rows={2}
+            />
+          </div>
+          {/* English Content */}
+          <div className="space-y-1.5">
+            <Label>Content (EN)</Label>
+            <div data-color-mode={colorMode}>
+              <MDEditor
+                value={contentEn}
+                onChange={(val) => {
+                  setContentEn(val ?? "");
+                  markDirty();
+                }}
+                height={500}
+                preview="live"
+              />
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between border-t pt-4">
