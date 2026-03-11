@@ -5,15 +5,19 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
+import type { Lang } from "@/lib/i18n/utils";
+import { getMessages } from "@/lib/i18n/messages";
 
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
+  lang: Lang;
 }
 
-export function Pagination({ currentPage, totalPages }: PaginationProps) {
+export function Pagination({ currentPage, totalPages, lang }: PaginationProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = getMessages(lang);
 
   const handlePageChange = useCallback(
     (page: number) => {
@@ -26,9 +30,9 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
       }
 
       const query = params.toString();
-      router.push(query ? `/blog?${query}` : "/blog");
+      router.push(query ? `/${lang}/blog?${query}` : `/${lang}/blog`);
     },
-    [router, searchParams],
+    [router, searchParams, lang],
   );
 
   if (totalPages <= 1) return null;
@@ -48,7 +52,7 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
         size="icon-sm"
         disabled={currentPage <= 1}
         onClick={() => handlePageChange(currentPage - 1)}
-        aria-label="이전 페이지"
+        aria-label={t.blog.prev}
       >
         <ChevronLeft className="size-4" />
       </Button>
@@ -100,7 +104,7 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
         size="icon-sm"
         disabled={currentPage >= totalPages}
         onClick={() => handlePageChange(currentPage + 1)}
-        aria-label="다음 페이지"
+        aria-label={t.blog.next}
       >
         <ChevronRight className="size-4" />
       </Button>

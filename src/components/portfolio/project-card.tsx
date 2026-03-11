@@ -10,20 +10,29 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import type { Project } from "@/lib/types";
+import type { Lang } from "@/lib/i18n/utils";
 
 interface ProjectCardProps {
   project: Project;
+  lang: Lang;
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+export function ProjectCard({ project, lang }: ProjectCardProps) {
+  const title =
+    lang === "en" ? (project.title_en ?? project.title) : project.title;
+  const description =
+    lang === "en"
+      ? (project.description_en ?? project.description)
+      : project.description;
+
   return (
-    <Link href={`/portfolio/${project.slug}`} className="group block">
+    <Link href={`/${lang}/portfolio/${project.slug}`} className="group block">
       <Card className="h-full transition-colors hover:ring-primary/40">
         {project.thumbnail && (
           <div className="relative aspect-video w-full overflow-hidden rounded-t-xl">
             <Image
               src={project.thumbnail}
-              alt={project.title}
+              alt={title}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -34,11 +43,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
         <CardHeader>
           <CardTitle className="line-clamp-1 text-lg font-semibold transition-colors group-hover:text-primary">
-            {project.title}
+            {title}
           </CardTitle>
-          {project.description && (
+          {description && (
             <CardDescription className="line-clamp-2">
-              {project.description}
+              {description}
             </CardDescription>
           )}
         </CardHeader>

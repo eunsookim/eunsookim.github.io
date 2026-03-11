@@ -6,20 +6,27 @@ import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 import type { Post, Series } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import type { Lang } from "@/lib/i18n/utils";
+import { getMessages } from "@/lib/i18n/messages";
 
 interface SeriesNavProps {
   series: Series;
   posts: Post[];
   currentPostId: string;
+  lang: Lang;
 }
 
-export function SeriesNav({ series, posts, currentPostId }: SeriesNavProps) {
+export function SeriesNav({ series, posts, currentPostId, lang }: SeriesNavProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const t = getMessages(lang);
 
   const currentIndex = posts.findIndex((p) => p.id === currentPostId);
   const prevPost = currentIndex > 0 ? posts[currentIndex - 1] : null;
   const nextPost =
     currentIndex < posts.length - 1 ? posts[currentIndex + 1] : null;
+
+  const seriesTitle =
+    lang === "en" ? (series.title_en ?? series.title) : series.title;
 
   return (
     <nav className="rounded-lg border border-border bg-card p-4">
@@ -30,9 +37,11 @@ export function SeriesNav({ series, posts, currentPostId }: SeriesNavProps) {
         className="flex w-full items-center justify-between text-left"
       >
         <div>
-          <p className="text-xs font-medium text-muted-foreground">시리즈</p>
+          <p className="text-xs font-medium text-muted-foreground">
+            {t.series.postsInSeries}
+          </p>
           <h3 className="font-mono text-sm font-semibold text-primary">
-            {series.title}
+            {seriesTitle}
           </h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {currentIndex + 1} / {posts.length}
@@ -51,6 +60,8 @@ export function SeriesNav({ series, posts, currentPostId }: SeriesNavProps) {
         <ol className="mt-3 space-y-1 border-t border-border pt-3">
           {posts.map((post, idx) => {
             const isCurrent = post.id === currentPostId;
+            const postTitle =
+              lang === "en" ? (post.title_en ?? post.title) : post.title;
             return (
               <li key={post.id}>
                 {isCurrent ? (
@@ -63,11 +74,11 @@ export function SeriesNav({ series, posts, currentPostId }: SeriesNavProps) {
                     <span className="shrink-0 font-mono text-xs text-muted-foreground">
                       {idx + 1}.
                     </span>
-                    {post.title}
+                    {postTitle}
                   </span>
                 ) : (
                   <Link
-                    href={`/blog/${post.slug}`}
+                    href={`/${lang}/blog/${post.slug}`}
                     className={cn(
                       "flex items-baseline gap-2 rounded px-2 py-1 text-sm",
                       "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -76,7 +87,7 @@ export function SeriesNav({ series, posts, currentPostId }: SeriesNavProps) {
                     <span className="shrink-0 font-mono text-xs">
                       {idx + 1}.
                     </span>
-                    {post.title}
+                    {postTitle}
                   </Link>
                 )}
               </li>
@@ -89,21 +100,21 @@ export function SeriesNav({ series, posts, currentPostId }: SeriesNavProps) {
       <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
         {prevPost ? (
           <Link
-            href={`/blog/${prevPost.slug}`}
+            href={`/${lang}/blog/${prevPost.slug}`}
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
           >
             <ChevronLeft className="h-3 w-3" />
-            <span className="line-clamp-1">이전글</span>
+            <span className="line-clamp-1">{t.blog.prev}</span>
           </Link>
         ) : (
           <span />
         )}
         {nextPost ? (
           <Link
-            href={`/blog/${nextPost.slug}`}
+            href={`/${lang}/blog/${nextPost.slug}`}
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
           >
-            <span className="line-clamp-1">다음글</span>
+            <span className="line-clamp-1">{t.blog.next}</span>
             <ChevronRight className="h-3 w-3" />
           </Link>
         ) : (

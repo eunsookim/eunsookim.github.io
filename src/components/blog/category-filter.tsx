@@ -5,18 +5,23 @@ import { useCallback } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import type { Category } from "@/lib/types";
+import type { Lang } from "@/lib/i18n/utils";
+import { getMessages } from "@/lib/i18n/messages";
 
 interface CategoryFilterProps {
   categories: Category[];
   currentCategory?: string;
+  lang: Lang;
 }
 
 export function CategoryFilter({
   categories,
   currentCategory,
+  lang,
 }: CategoryFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = getMessages(lang);
 
   const handleCategoryClick = useCallback(
     (slug?: string) => {
@@ -32,18 +37,22 @@ export function CategoryFilter({
       params.delete("page");
 
       const query = params.toString();
-      router.push(query ? `/blog?${query}` : "/blog");
+      router.push(query ? `/${lang}/blog?${query}` : `/${lang}/blog`);
     },
-    [router, searchParams],
+    [router, searchParams, lang],
   );
 
   return (
     <div className="flex flex-wrap gap-2">
       <button type="button" onClick={() => handleCategoryClick()}>
-        <Badge variant={!currentCategory ? "default" : "outline"}>전체</Badge>
+        <Badge variant={!currentCategory ? "default" : "outline"}>
+          {t.blog.allCategories}
+        </Badge>
       </button>
       {categories.map((category) => {
         const isActive = currentCategory === category.slug;
+        const name =
+          lang === "en" ? (category.name_en ?? category.name) : category.name;
         return (
           <button
             key={category.id}
@@ -67,7 +76,7 @@ export function CategoryFilter({
                     : undefined
               }
             >
-              {category.name}
+              {name}
             </Badge>
           </button>
         );

@@ -11,28 +11,41 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import type { PostWithRelations } from "@/lib/types";
+import type { Lang } from "@/lib/i18n/utils";
 
 interface PostCardProps {
   post: PostWithRelations;
+  lang: Lang;
 }
 
-export function PostCard({ post }: PostCardProps) {
+export function PostCard({ post, lang }: PostCardProps) {
+  const title = lang === "en" ? (post.title_en ?? post.title) : post.title;
+  const excerpt = lang === "en" ? (post.excerpt_en ?? post.excerpt) : post.excerpt;
+  const categoryName = post.category
+    ? lang === "en"
+      ? (post.category.name_en ?? post.category.name)
+      : post.category.name
+    : null;
+
   const formattedDate = post.published_at
-    ? new Date(post.published_at).toLocaleDateString("ko-KR", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+    ? new Date(post.published_at).toLocaleDateString(
+        lang === "en" ? "en-US" : "ko-KR",
+        {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        },
+      )
     : null;
 
   return (
-    <Link href={`/blog/${post.slug}`} className="group block">
+    <Link href={`/${lang}/blog/${post.slug}`} className="group block">
       <Card className="transition-colors hover:ring-primary/40">
         {post.cover_image && (
           <div className="relative aspect-[2/1] w-full overflow-hidden rounded-t-xl">
             <Image
               src={post.cover_image}
-              alt={post.title}
+              alt={title}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -56,16 +69,16 @@ export function PostCard({ post }: PostCardProps) {
                     : undefined
                 }
               >
-                {post.category.name}
+                {categoryName}
               </Badge>
             </div>
           )}
           <CardTitle className="line-clamp-2 text-lg font-semibold transition-colors group-hover:text-primary">
-            {post.title}
+            {title}
           </CardTitle>
-          {post.excerpt && (
+          {excerpt && (
             <CardDescription className="line-clamp-2">
-              {post.excerpt}
+              {excerpt}
             </CardDescription>
           )}
         </CardHeader>

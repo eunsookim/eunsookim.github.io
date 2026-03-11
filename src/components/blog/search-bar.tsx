@@ -5,10 +5,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, type FormEvent } from "react";
 
 import { Input } from "@/components/ui/input";
+import type { Lang } from "@/lib/i18n/utils";
+import { getMessages } from "@/lib/i18n/messages";
 
-export function SearchBar() {
+interface SearchBarProps {
+  lang: Lang;
+}
+
+export function SearchBar({ lang }: SearchBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = getMessages(lang);
 
   const handleSubmit = useCallback(
     (e: FormEvent<HTMLFormElement>) => {
@@ -28,9 +35,9 @@ export function SearchBar() {
       params.delete("page");
 
       const query = params.toString();
-      router.push(query ? `/blog?${query}` : "/blog");
+      router.push(query ? `/${lang}/blog?${query}` : `/${lang}/blog`);
     },
-    [router, searchParams],
+    [router, searchParams, lang],
   );
 
   return (
@@ -39,7 +46,7 @@ export function SearchBar() {
       <Input
         name="q"
         type="search"
-        placeholder="검색..."
+        placeholder={t.blog.search}
         defaultValue={searchParams.get("q") ?? ""}
         className="pl-8"
       />

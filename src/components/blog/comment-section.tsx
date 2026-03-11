@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/dialog";
 
 import type { Comment, CommentWithReplies } from "@/lib/types";
+import type { Lang } from "@/lib/i18n/utils";
+import { getMessages } from "@/lib/i18n/messages";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -49,13 +51,15 @@ interface CommentFormProps {
   parentId?: string | null;
   onSuccess: () => void;
   onCancel?: () => void;
+  lang: Lang;
 }
 
-function CommentForm({ postId, parentId, onSuccess, onCancel }: CommentFormProps) {
+function CommentForm({ postId, parentId, onSuccess, onCancel, lang }: CommentFormProps) {
   const [authorName, setAuthorName] = useState("");
   const [password, setPassword] = useState("");
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const t = getMessages(lang);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -117,10 +121,10 @@ function CommentForm({ postId, parentId, onSuccess, onCancel }: CommentFormProps
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor={`name-${parentId ?? "root"}`}>이름</Label>
+          <Label htmlFor={`name-${parentId ?? "root"}`}>{t.comment.name}</Label>
           <Input
             id={`name-${parentId ?? "root"}`}
-            placeholder="이름"
+            placeholder={t.comment.name}
             value={authorName}
             onChange={(e) => setAuthorName(e.target.value)}
             maxLength={50}
@@ -128,11 +132,11 @@ function CommentForm({ postId, parentId, onSuccess, onCancel }: CommentFormProps
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor={`pw-${parentId ?? "root"}`}>비밀번호</Label>
+          <Label htmlFor={`pw-${parentId ?? "root"}`}>{t.comment.password}</Label>
           <Input
             id={`pw-${parentId ?? "root"}`}
             type="password"
-            placeholder="비밀번호 (4자 이상)"
+            placeholder={t.comment.password}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             minLength={4}
@@ -153,7 +157,7 @@ function CommentForm({ postId, parentId, onSuccess, onCancel }: CommentFormProps
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <Label htmlFor={`content-${parentId ?? "root"}`}>내용</Label>
+          <Label htmlFor={`content-${parentId ?? "root"}`}>{t.comment.content}</Label>
           <span className="text-xs text-muted-foreground">
             {content.length}/{CONTENT_MAX}
           </span>
@@ -172,11 +176,11 @@ function CommentForm({ postId, parentId, onSuccess, onCancel }: CommentFormProps
       <div className="flex items-center gap-2">
         <Button type="submit" disabled={submitting} size="sm">
           {submitting && <Loader2Icon className="size-3.5 animate-spin" />}
-          {parentId ? "답글 작성" : "댓글 작성"}
+          {parentId ? t.comment.replyTo : t.comment.submit}
         </Button>
         {onCancel && (
           <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-            취소
+            {t.comment.cancelButton}
           </Button>
         )}
       </div>
@@ -193,9 +197,12 @@ interface CommentItemProps {
   isReply?: boolean;
   onReplyClick?: (commentId: string) => void;
   onDelete: (commentId: string) => void;
+  lang: Lang;
 }
 
-function CommentItem({ comment, isReply, onReplyClick, onDelete }: CommentItemProps) {
+function CommentItem({ comment, isReply, onReplyClick, onDelete, lang }: CommentItemProps) {
+  const t = getMessages(lang);
+
   return (
     <div
       className={
@@ -226,7 +233,7 @@ function CommentItem({ comment, isReply, onReplyClick, onDelete }: CommentItemPr
             className="text-muted-foreground hover:text-primary"
           >
             <MessageSquareIcon className="size-3" />
-            답글
+            {t.comment.reply}
           </Button>
         )}
         <Button
@@ -236,7 +243,7 @@ function CommentItem({ comment, isReply, onReplyClick, onDelete }: CommentItemPr
           className="text-muted-foreground hover:text-destructive"
         >
           <Trash2Icon className="size-3" />
-          삭제
+          {t.comment.delete}
         </Button>
       </div>
     </div>
@@ -251,12 +258,14 @@ interface DeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (password: string) => Promise<void>;
+  lang: Lang;
 }
 
-function DeleteDialog({ open, onOpenChange, onConfirm }: DeleteDialogProps) {
+function DeleteDialog({ open, onOpenChange, onConfirm, lang }: DeleteDialogProps) {
   const [password, setPassword] = useState("");
   const [deleting, setDeleting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const t = getMessages(lang);
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -285,19 +294,19 @@ function DeleteDialog({ open, onOpenChange, onConfirm }: DeleteDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>댓글 삭제</DialogTitle>
+          <DialogTitle>{t.comment.title}</DialogTitle>
           <DialogDescription>
-            댓글을 삭제하려면 작성 시 입력한 비밀번호를 입력해주세요.
+            {t.comment.deleteConfirm}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-1.5 px-0">
-          <Label htmlFor="delete-password">비밀번호</Label>
+          <Label htmlFor="delete-password">{t.comment.password}</Label>
           <Input
             ref={inputRef}
             id="delete-password"
             type="password"
-            placeholder="비밀번호"
+            placeholder={t.comment.password}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => {
@@ -317,7 +326,7 @@ function DeleteDialog({ open, onOpenChange, onConfirm }: DeleteDialogProps) {
             onClick={handleConfirm}
           >
             {deleting && <Loader2Icon className="size-3.5 animate-spin" />}
-            삭제
+            {t.comment.deleteButton}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -331,12 +340,14 @@ function DeleteDialog({ open, onOpenChange, onConfirm }: DeleteDialogProps) {
 
 interface CommentSectionProps {
   postId: string;
+  lang: Lang;
 }
 
-export function CommentSection({ postId }: CommentSectionProps) {
+export function CommentSection({ postId, lang }: CommentSectionProps) {
   const [comments, setComments] = useState<CommentWithReplies[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyTo, setReplyTo] = useState<string | null>(null);
+  const t = getMessages(lang);
 
   // Delete dialog state
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -408,14 +419,14 @@ export function CommentSection({ postId }: CommentSectionProps) {
   return (
     <section className="mt-12">
       <h2 className="text-lg font-semibold text-foreground">
-        댓글 {totalCount > 0 && <span className="text-primary">({totalCount})</span>}
+        {t.comment.title} {totalCount > 0 && <span className="text-primary">({totalCount})</span>}
       </h2>
 
       <Separator className="my-4" />
 
       {/* Comment form */}
       <div className="rounded-lg border border-border bg-card p-4">
-        <CommentForm postId={postId} onSuccess={handleCommentSuccess} />
+        <CommentForm postId={postId} onSuccess={handleCommentSuccess} lang={lang} />
       </div>
 
       {/* Comment list */}
@@ -427,7 +438,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
           </div>
         ) : comments.length === 0 ? (
           <div className="py-8 text-center text-sm text-muted-foreground">
-            아직 댓글이 없습니다. 첫 댓글을 남겨보세요!
+            {t.comment.noComments}
           </div>
         ) : (
           comments.map((comment, index) => (
@@ -439,6 +450,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
                 comment={comment}
                 onReplyClick={handleReplyClick}
                 onDelete={setDeleteTarget}
+                lang={lang}
               />
 
               {/* Replies */}
@@ -450,6 +462,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
                       comment={reply}
                       isReply
                       onDelete={setDeleteTarget}
+                      lang={lang}
                     />
                   ))}
                 </div>
@@ -463,6 +476,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
                     parentId={comment.id}
                     onSuccess={handleCommentSuccess}
                     onCancel={() => setReplyTo(null)}
+                    lang={lang}
                   />
                 </div>
               )}
@@ -478,6 +492,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
           if (!open) setDeleteTarget(null);
         }}
         onConfirm={handleDeleteConfirm}
+        lang={lang}
       />
     </section>
   );
