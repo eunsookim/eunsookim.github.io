@@ -8,6 +8,7 @@ import PostContent from "@/components/blog/post-content";
 import { SeriesNav } from "@/components/blog/series-nav";
 import { CommentSection } from "@/components/blog/comment-section";
 import { PostNavigation } from "@/components/blog/post-navigation";
+import { ViewCounter } from "@/components/blog/view-counter";
 import {
   TableOfContents,
   extractTocItems,
@@ -177,6 +178,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {formattedDate && (
                 <time dateTime={post.published_at!}>{formattedDate}</time>
               )}
+              <ViewCounter postId={post.id} initialCount={post.view_count} />
 
               {post.category && (
                 <Link href={`/${lang}/blog?category=${post.category.slug}`}>

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Eye } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -95,14 +96,22 @@ export function PostCard({ post, lang }: PostCardProps) {
           </CardContent>
         )}
 
-        {formattedDate && (
+        {(formattedDate || post.view_count > 0) && (
           <CardFooter>
-            <time
-              dateTime={post.published_at!}
-              className="text-xs text-muted-foreground"
-            >
-              {formattedDate}
-            </time>
+            <div className="flex w-full items-center justify-between">
+              {formattedDate && (
+                <time
+                  dateTime={post.published_at!}
+                  className="text-xs text-muted-foreground"
+                >
+                  {formattedDate}
+                </time>
+              )}
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Eye className="size-3" />
+                {post.view_count}
+              </span>
+            </div>
           </CardFooter>
         )}
       </Card>
