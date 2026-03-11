@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PlusCircle, Pencil } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, Send } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
@@ -13,25 +13,44 @@ import {
 
 const PAGE_SIZE = 20;
 
+const TABS = [
+  { key: "all", label: "전체 글", href: "/admin/posts" },
+  { key: "ai", label: "AI 초안", href: "/admin/posts?tab=ai" },
+] as const;
+
 export default async function AdminPostsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; tab?: string }>;
 }) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, tab } = await searchParams;
+  const activeTab = tab === "ai" ? "ai" : "all";
   const currentPage = Math.max(1, Number(pageParam) || 1);
   const from = (currentPage - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
   const supabase = await createClient();
 
-  const { data: posts, count } = await supabase
+  let query = supabase
     .from("posts")
     .select("*, category:categories(name)", { count: "exact" })
-    .order("created_at", { ascending: false })
-    .range(from, to);
+    .order("created_at", { ascending: false });
+
+  if (activeTab === "ai") {
+    query = query.eq("status", "pending_review");
+  }
+
+  const { data: posts, count } = await query.range(from, to);
 
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
+
+  const paginationHref = (page: number) => {
+    const params = new URLSearchParams();
+    if (activeTab === "ai") params.set("tab", "ai");
+    if (page > 1) params.set("page", String(page));
+    const qs = params.toString();
+    return `/admin/posts${qs ? `?${qs}` : ""}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -47,6 +66,23 @@ export default async function AdminPostsPage({
         </Button>
       </div>
 
+      {/* Tabs */}
+      <nav className="flex gap-1 border-b border-border">
+        {TABS.map((t) => (
+          <Link
+            key={t.key}
+            href={t.href}
+            className={`px-4 py-2 font-mono text-sm transition-colors ${
+              activeTab === t.key
+                ? "border-b-2 border-primary font-semibold text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t.label}
+          </Link>
+        ))}
+      </nav>
+
       {/* Post list */}
       {posts && posts.length > 0 ? (
         <div className="space-y-3">
@@ -55,23 +91,57 @@ export default async function AdminPostsPage({
               <CardHeader className="flex flex-row items-center justify-between">
                 <div className="flex items-center gap-3">
                   <CardTitle className="font-mono">{post.title}</CardTitle>
-                  {post.is_published ? (
-                    <Badge variant="default">
-                      발행됨
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary">
-                      임시저장
+                  {post.generated_by === "ai" && (
+                    <Badge
+                      className="border-amber-300 bg-amber-100 text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                    >
+                      AI 생성
                     </Badge>
                   )}
+                  {post.status === "published" ? (
+                    <Badge variant="default">발행됨</Badge>
+                  ) : post.status === "pending_review" ? (
+                    <Badge variant="outline">검토 대기</Badge>
+                  ) : post.status === "scheduled" ? (
+                    <Badge variant="secondary">예약됨</Badge>
+                  ) : (
+                    <Badge variant="secondary">임시저장</Badge>
+                  )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  render={<Link href={`/admin/posts/${post.id}/edit`} />}
-                >
-                  <Pencil className="size-4" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  {activeTab === "ai" && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        render={
+                          <Link href={`/admin/posts/${post.id}/edit?action=publish`} />
+                        }
+                        title="발행"
+                      >
+                        <Send className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        render={
+                          <Link href={`/admin/posts/${post.id}/edit?action=delete`} />
+                        }
+                        title="삭제"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    render={<Link href={`/admin/posts/${post.id}/edit`} />}
+                    title="편집"
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-4 font-mono text-xs text-muted-foreground">
@@ -91,7 +161,9 @@ export default async function AdminPostsPage({
       ) : (
         <Card>
           <CardContent className="py-8 text-center font-mono text-sm text-muted-foreground">
-            게시글이 없습니다. 새 글을 작성해보세요.
+            {activeTab === "ai"
+              ? "검토 대기 중인 AI 초안이 없습니다."
+              : "게시글이 없습니다. 새 글을 작성해보세요."}
           </CardContent>
         </Card>
       )}
@@ -104,9 +176,7 @@ export default async function AdminPostsPage({
               variant="outline"
               size="sm"
               render={
-                <Link
-                  href={`/admin/posts?page=${currentPage - 1}`}
-                />
+                <Link href={paginationHref(currentPage - 1)} />
               }
             >
               이전
@@ -120,9 +190,7 @@ export default async function AdminPostsPage({
               variant="outline"
               size="sm"
               render={
-                <Link
-                  href={`/admin/posts?page=${currentPage + 1}`}
-                />
+                <Link href={paginationHref(currentPage + 1)} />
               }
             >
               다음
