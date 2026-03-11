@@ -4,6 +4,8 @@ import { ArrowRight, Terminal } from "lucide-react";
 import { PostCard } from "@/components/blog/post-card";
 import { createClient } from "@/lib/supabase/server";
 import type { PostWithRelations } from "@/lib/types";
+import type { Lang } from "@/lib/i18n/utils";
+import { getMessages } from "@/lib/i18n/messages";
 
 async function getLatestPosts(): Promise<PostWithRelations[]> {
   try {
@@ -30,7 +32,13 @@ async function getLatestPosts(): Promise<PostWithRelations[]> {
   }
 }
 
-export default async function Home() {
+interface HomePageProps {
+  params: Promise<{ lang: string }>;
+}
+
+export default async function Home({ params }: HomePageProps) {
+  const { lang } = await params;
+  const t = getMessages(lang as Lang);
   const posts = await getLatestPosts();
 
   return (
@@ -39,30 +47,30 @@ export default async function Home() {
       <section className="flex flex-col items-center justify-center py-24 text-center md:py-32">
         <div className="mb-6 flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-4 py-1.5 font-mono text-sm text-primary">
           <Terminal className="size-4" />
-          <span>~/eunsookim.dev</span>
+          <span>{t.hero.tagline}</span>
         </div>
 
         <h1 className="font-mono text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-          <span className="text-primary">$</span> hello world_
+          {t.hero.heading}
         </h1>
 
         <p className="mt-4 max-w-lg font-mono text-lg text-muted-foreground">
-          기술에 대한 생각과 의견, 그리고 배움을 기록하는 개발 블로그.
+          {t.hero.description}
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
-            href="/blog"
+            href={`/${lang}/blog`}
             className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80"
           >
-            Blog 보기
+            {t.hero.blogButton}
             <ArrowRight className="size-4" />
           </Link>
           <Link
-            href="/portfolio"
+            href={`/${lang}/portfolio`}
             className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-5 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50"
           >
-            Portfolio
+            {t.hero.portfolioButton}
           </Link>
         </div>
       </section>
@@ -72,20 +80,20 @@ export default async function Home() {
         <section className="border-t border-border/40 py-16">
           <div className="mb-8 flex items-end justify-between">
             <h2 className="font-mono text-2xl font-bold text-foreground">
-              <span className="text-primary">#</span> 최근 글
+              <span className="text-primary">#</span> {t.blog.latestPosts}
             </h2>
             <Link
-              href="/blog"
+              href={`/${lang}/blog`}
               className="group flex items-center gap-1 font-mono text-sm text-muted-foreground transition-colors hover:text-primary"
             >
-              모든 글 보기
+              {t.blog.viewAll}
               <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
+              <PostCard key={post.id} post={post} lang={lang as Lang} />
             ))}
           </div>
         </section>
