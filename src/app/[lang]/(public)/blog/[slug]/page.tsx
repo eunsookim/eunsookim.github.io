@@ -8,6 +8,7 @@ import PostContent from "@/components/blog/post-content";
 import { SeriesNav } from "@/components/blog/series-nav";
 import { CommentSection } from "@/components/blog/comment-section";
 import { PostNavigation } from "@/components/blog/post-navigation";
+import { RelatedPosts } from "@/components/blog/related-posts";
 import { ViewCounter } from "@/components/blog/view-counter";
 import { ShareButtons } from "@/components/blog/share-buttons";
 import {
@@ -74,6 +75,35 @@ async function getNextPost(publishedAt: string) {
   return data;
 }
 
+async function getRelatedPosts(postId: string, categoryId: string | null) {
+  const supabase = await createClient();
+
+  // Try same category first
+  if (categoryId) {
+    const { data } = await supabase
+      .from("posts")
+      .select("slug, title, title_en, excerpt, excerpt_en, cover_image, published_at")
+      .eq("is_published", true)
+      .eq("category_id", categoryId)
+      .neq("id", postId)
+      .order("published_at", { ascending: false })
+      .limit(4);
+
+    if (data && data.length > 0) return data;
+  }
+
+  // Fallback: recent posts excluding current
+  const { data } = await supabase
+    .from("posts")
+    .select("slug, title, title_en, excerpt, excerpt_en, cover_image, published_at")
+    .eq("is_published", true)
+    .neq("id", postId)
+    .order("published_at", { ascending: false })
+    .limit(4);
+
+  return data ?? [];
+}
+
 export async function generateMetadata({
   params,
 }: BlogPostPageProps): Promise<Metadata> {
@@ -137,6 +167,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         getNextPost(post.published_at),
       ])
     : [null, null];
+
+  // Fetch related posts
+  const relatedPosts = await getRelatedPosts(post.id, post.category_id);
 
   // Extract TOC items from markdown content
   const tocItems = content ? extractTocItems(content) : [];
@@ -250,6 +283,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               />
             </div>
           )}
+
+          {/* Related posts */}
+          <RelatedPosts posts={relatedPosts} lang={lang as Lang} />
 
           {/* Post navigation */}
           <PostNavigation prevPost={prevPost} nextPost={nextPost} lang={lang as Lang} />
