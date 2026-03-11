@@ -16,12 +16,8 @@ import {
   SheetClose,
 } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
-
-const navLinks = [
-  { href: "/blog", label: "Blog" },
-  { href: "/portfolio", label: "Portfolio" },
-  { href: "/about", label: "About" },
-]
+import type { Lang } from "@/lib/i18n/utils"
+import { getMessages } from "@/lib/i18n/messages"
 
 function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
@@ -55,16 +51,46 @@ function ThemeToggle() {
   )
 }
 
-export function Header() {
+function LanguageToggle({ lang, switchHref }: { lang: Lang; switchHref: string }) {
+  const messages = getMessages(lang)
+
+  const handleSwitch = () => {
+    const otherLang = lang === "ko" ? "en" : "ko"
+    document.cookie = `preferred-lang=${otherLang}; path=/; max-age=${60 * 60 * 24 * 365}`
+    window.location.href = switchHref
+  }
+
+  return (
+    <Button variant="ghost" size="icon" aria-label="Switch language" onClick={handleSwitch}>
+      <span className="text-xs font-bold">{messages.lang.toggle}</span>
+    </Button>
+  )
+}
+
+interface HeaderProps {
+  lang: Lang
+}
+
+export function Header({ lang }: HeaderProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+
+  const messages = getMessages(lang)
+  const navLinks = [
+    { href: `/${lang}/blog`, label: messages.nav.blog },
+    { href: `/${lang}/portfolio`, label: messages.nav.portfolio },
+    { href: `/${lang}/about`, label: messages.nav.about },
+  ]
+
+  const otherLang = lang === "ko" ? "en" : "ko"
+  const switchHref = pathname?.replace(`/${lang}`, `/${otherLang}`) ?? `/${otherLang}`
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
         {/* Logo */}
         <Link
-          href="/"
+          href={`/${lang}`}
           className="font-mono text-lg font-bold tracking-tight text-primary transition-colors hover:text-primary/80"
         >
           eunsookim.dev
@@ -86,11 +112,13 @@ export function Header() {
               {link.label}
             </Link>
           ))}
+          <LanguageToggle lang={lang} switchHref={switchHref} />
           <ThemeToggle />
         </nav>
 
         {/* Mobile Navigation */}
         <div className="flex items-center gap-1 md:hidden">
+          <LanguageToggle lang={lang} switchHref={switchHref} />
           <ThemeToggle />
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger
