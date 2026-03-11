@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { ImagePlus, Languages, Loader2, Save, Send } from "lucide-react";
+import { Clock, ImagePlus, Languages, Loader2, Save, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import type { Post, Category, Series } from "@/lib/types";
@@ -94,6 +94,8 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
 
   const [saving, setSaving] = useState(false);
   const [autoSavedAt, setAutoSavedAt] = useState<string | null>(null);
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState("");
 
   // Track whether user has manually edited the slug
   const slugManuallyEdited = useRef(!!post);
@@ -389,6 +391,61 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
     ],
   );
 
+  const handleSchedule = useCallback(async () => {
+    if (!scheduledAt) {
+      toast.error("예약 날짜/시간을 선택해주세요.");
+      return;
+    }
+    if (!title.trim() || !slug.trim()) {
+      toast.error("제목과 슬러그를 입력해주세요.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      const payload = {
+        title: title.trim(),
+        slug: slug.trim(),
+        excerpt: excerpt.trim() || null,
+        content: content || null,
+        cover_image: coverImage,
+        category_id: categoryId,
+        series_id: seriesId,
+        series_order: seriesOrder,
+        is_published: false,
+        tags,
+        title_en: titleEn.trim() || null,
+        excerpt_en: excerptEn.trim() || null,
+        content_en: contentEn || null,
+        status: "scheduled" as const,
+        generated_by: "human" as const,
+        scheduled_at: new Date(scheduledAt).toISOString(),
+      };
+
+      if (post) {
+        const { error } = await supabase
+          .from("posts")
+          .update({ ...payload, updated_at: new Date().toISOString() })
+          .eq("id", post.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("posts").insert(payload);
+        if (error) throw error;
+      }
+
+      localStorage.removeItem(draftKey(post?.id));
+      isDirty.current = false;
+      toast.success(`${new Date(scheduledAt).toLocaleString("ko-KR")}에 발행 예약되었습니다.`);
+      router.push("/admin/posts");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "예약에 실패했습니다.";
+      toast.error(message);
+    } finally {
+      setSaving(false);
+    }
+  }, [title, slug, excerpt, content, coverImage, categoryId, seriesId, seriesOrder, tags, titleEn, excerptEn, contentEn, post, router, scheduledAt]);
+
   const colorMode = useMemo(
     () => (resolvedTheme === "dark" ? "dark" : "light"),
     [resolvedTheme],
@@ -639,6 +696,37 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
             )}
             임시 저장
           </Button>
+          {/* Schedule button with popover */}
+          <div className="relative">
+            <Button
+              variant="outline"
+              disabled={saving}
+              onClick={() => setShowSchedule(!showSchedule)}
+            >
+              <Clock className="size-4" />
+              예약
+            </Button>
+            {showSchedule && (
+              <div className="absolute bottom-full right-0 mb-2 rounded-lg border border-border bg-popover p-3 shadow-lg">
+                <Label htmlFor="schedule-date" className="text-xs">발행 예약 시간</Label>
+                <input
+                  id="schedule-date"
+                  type="datetime-local"
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+                />
+                <Button
+                  size="sm"
+                  className="mt-2 w-full"
+                  disabled={saving || !scheduledAt}
+                  onClick={handleSchedule}
+                >
+                  예약 발행
+                </Button>
+              </div>
+            )}
+          </div>
           <Button disabled={saving} onClick={() => handleSave(true)}>
             {saving ? (
               <Loader2 className="size-4 animate-spin" />
