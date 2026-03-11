@@ -4,11 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Languages, Loader2, Save, Send } from "lucide-react";
+import { ImagePlus, Languages, Loader2, Save, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import type { Post, Category, Series } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
+import { uploadImage } from "@/lib/firebase";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -127,6 +128,49 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
   const markDirty = useCallback(() => {
     isDirty.current = true;
   }, []);
+
+  // ------ Image upload ------
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = useCallback(
+    async (file: File) => {
+      // Validate file type
+      const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+      if (!validTypes.includes(file.type)) {
+        toast.error("JPEG, PNG, WebP, GIF 이미지만 업로드 가능합니다.");
+        return;
+      }
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("이미지 크기는 5MB 이하여야 합니다.");
+        return;
+      }
+
+      // Determine which content setter to use based on active tab
+      const setContentFn = editorTab === "ko" ? setContent : setContentEn;
+      const currentContent = editorTab === "ko" ? content : contentEn;
+
+      // Add placeholder
+      const placeholder = `![업로드 중...](uploading-${Date.now()})`;
+      setContentFn(currentContent + "\n" + placeholder);
+      markDirty();
+
+      try {
+        const path = `blog/${slug || "draft"}/${Date.now()}-${file.name}`;
+        const url = await uploadImage(file, path);
+        // Replace placeholder with actual URL
+        setContentFn((prev: string) =>
+          prev.replace(placeholder, `![${file.name}](${url})`),
+        );
+        toast.success("이미지가 업로드되었습니다.");
+      } catch {
+        // Remove placeholder on error
+        setContentFn((prev: string) => prev.replace("\n" + placeholder, ""));
+        toast.error("이미지 업로드에 실패했습니다.");
+      }
+    },
+    [editorTab, content, contentEn, slug, markDirty],
+  );
 
   // ------ Translation ------
   const handleTranslate = useCallback(async () => {
@@ -352,6 +396,19 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
+      {/* Hidden file input for image upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleImageUpload(file);
+          e.target.value = "";
+        }}
+      />
+
       {/* Slug (shared, outside tabs) */}
       <div className="space-y-1.5">
         <Label htmlFor="post-slug">슬러그</Label>
@@ -403,15 +460,25 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
             <TabsTrigger value="ko">한국어</TabsTrigger>
             <TabsTrigger value="en">English</TabsTrigger>
           </TabsList>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleTranslate}
-            disabled={translating}
-          >
-            {translating ? <Loader2 className="size-4 animate-spin" /> : <Languages className="size-4" />}
-            번역
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <ImagePlus className="size-4" />
+              이미지
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleTranslate}
+              disabled={translating}
+            >
+              {translating ? <Loader2 className="size-4 animate-spin" /> : <Languages className="size-4" />}
+              번역
+            </Button>
+          </div>
         </div>
 
         <TabsContent value="ko" className="space-y-6">
@@ -443,7 +510,32 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
           {/* Korean Content */}
           <div className="space-y-1.5">
             <Label>본문</Label>
-            <div data-color-mode={colorMode}>
+            <div
+              data-color-mode={colorMode}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.currentTarget.classList.add("ring-2", "ring-primary");
+              }}
+              onDragLeave={(e) => {
+                e.currentTarget.classList.remove("ring-2", "ring-primary");
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove("ring-2", "ring-primary");
+                const files = Array.from(e.dataTransfer.files);
+                const imageFile = files.find((f) => f.type.startsWith("image/"));
+                if (imageFile) handleImageUpload(imageFile);
+              }}
+              onPaste={(e) => {
+                const items = Array.from(e.clipboardData.items);
+                const imageItem = items.find((item) => item.type.startsWith("image/"));
+                if (imageItem) {
+                  e.preventDefault();
+                  const file = imageItem.getAsFile();
+                  if (file) handleImageUpload(file);
+                }
+              }}
+            >
               <MDEditor
                 value={content}
                 onChange={(val) => {
@@ -489,7 +581,32 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
           {/* English Content */}
           <div className="space-y-1.5">
             <Label>Content (EN)</Label>
-            <div data-color-mode={colorMode}>
+            <div
+              data-color-mode={colorMode}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.currentTarget.classList.add("ring-2", "ring-primary");
+              }}
+              onDragLeave={(e) => {
+                e.currentTarget.classList.remove("ring-2", "ring-primary");
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove("ring-2", "ring-primary");
+                const files = Array.from(e.dataTransfer.files);
+                const imageFile = files.find((f) => f.type.startsWith("image/"));
+                if (imageFile) handleImageUpload(imageFile);
+              }}
+              onPaste={(e) => {
+                const items = Array.from(e.clipboardData.items);
+                const imageItem = items.find((item) => item.type.startsWith("image/"));
+                if (imageItem) {
+                  e.preventDefault();
+                  const file = imageItem.getAsFile();
+                  if (file) handleImageUpload(file);
+                }
+              }}
+            >
               <MDEditor
                 value={contentEn}
                 onChange={(val) => {
