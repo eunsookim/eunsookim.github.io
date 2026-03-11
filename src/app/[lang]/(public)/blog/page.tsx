@@ -6,6 +6,8 @@ import { PostCard } from "@/components/blog/post-card";
 import { SearchBar } from "@/components/blog/search-bar";
 import { createClient } from "@/lib/supabase/server";
 import type { Category, PostWithRelations } from "@/lib/types";
+import type { Lang } from "@/lib/i18n/utils";
+import { getMessages } from "@/lib/i18n/messages";
 
 const POSTS_PER_PAGE = 10;
 
@@ -15,6 +17,7 @@ function escapeSearchQuery(query: string): string {
 }
 
 interface BlogPageProps {
+  params: Promise<{ lang: string }>;
   searchParams: Promise<{
     category?: string;
     tag?: string;
@@ -23,12 +26,14 @@ interface BlogPageProps {
   }>;
 }
 
-export default async function BlogPage({ searchParams }: BlogPageProps) {
-  const params = await searchParams;
-  const currentPage = Math.max(1, Number(params.page) || 1);
-  const categorySlug = params.category;
-  const tagFilter = params.tag;
-  const searchQuery = params.q?.trim();
+export default async function BlogPage({ params, searchParams }: BlogPageProps) {
+  const { lang } = await params;
+  const t = getMessages(lang as Lang);
+  const resolvedSearchParams = await searchParams;
+  const currentPage = Math.max(1, Number(resolvedSearchParams.page) || 1);
+  const categorySlug = resolvedSearchParams.category;
+  const tagFilter = resolvedSearchParams.tag;
+  const searchQuery = resolvedSearchParams.q?.trim();
 
   const supabase = await createClient();
 
@@ -88,7 +93,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           <span className="text-muted-foreground">$</span> ls ./blog
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          개발 이야기와 기술 노트
+          {lang === "en" ? "Dev stories and tech notes" : "개발 이야기와 기술 노트"}
         </p>
       </div>
 
@@ -98,17 +103,19 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           <CategoryFilter
             categories={typedCategories}
             currentCategory={categorySlug}
+            lang={lang as Lang}
           />
         </Suspense>
         <Suspense fallback={null}>
-          <SearchBar />
+          <SearchBar lang={lang as Lang} />
         </Suspense>
       </div>
 
       {/* Active tag filter indicator */}
       {tagFilter && (
         <p className="mb-4 text-sm text-muted-foreground">
-          태그: <span className="font-medium text-primary">{tagFilter}</span>
+          {lang === "en" ? "Tag:" : "태그:"}{" "}
+          <span className="font-medium text-primary">{tagFilter}</span>
         </p>
       )}
 
@@ -116,14 +123,13 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
       {typedPosts.length > 0 ? (
         <div className="grid gap-6">
           {typedPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
+            <PostCard key={post.id} post={post} lang={lang as Lang} />
           ))}
         </div>
       ) : (
         <div className="py-20 text-center">
           <p className="font-mono text-muted-foreground">
-            <span className="text-primary">$</span> echo &quot;게시글을 찾을 수
-            없습니다&quot;
+            <span className="text-primary">$</span> echo &quot;{t.blog.noResults}&quot;
           </p>
         </div>
       )}
@@ -131,7 +137,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
       {/* Pagination */}
       <div className="mt-10">
         <Suspense fallback={null}>
-          <Pagination currentPage={currentPage} totalPages={totalPages} />
+          <Pagination currentPage={currentPage} totalPages={totalPages} lang={lang as Lang} />
         </Suspense>
       </div>
     </section>
