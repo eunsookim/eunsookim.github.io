@@ -42,9 +42,7 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
     <section className="mx-auto max-w-4xl px-4 py-10">
       {/* Page heading */}
       <div className="mb-8">
-        <h1 className="font-mono text-3xl font-bold text-primary">
-          <span className="text-muted-foreground">$</span> ls ./portfolio
-        </h1>
+        <h1 className="text-3xl font-bold text-foreground">{t.portfolio.title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {t.portfolio.description}
         </p>
@@ -59,9 +57,7 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
         </div>
       ) : (
         <div className="py-20 text-center">
-          <p className="font-mono text-muted-foreground">
-            <span className="text-primary">$</span> echo &quot;{t.portfolio.noProjects}&quot;
-          </p>
+          <p className="text-muted-foreground">{t.portfolio.noProjects}</p>
         </div>
       )}
     </section>

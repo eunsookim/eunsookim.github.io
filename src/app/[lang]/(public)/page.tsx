@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Terminal } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { PostCard } from "@/components/blog/post-card";
 import { createClient } from "@/lib/supabase/server";
@@ -45,16 +45,13 @@ export default async function Home({ params }: HomePageProps) {
     <div className="mx-auto max-w-4xl px-4">
       {/* Hero Section */}
       <section className="flex flex-col items-center justify-center py-24 text-center md:py-32">
-        <div className="mb-6 flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-4 py-1.5 font-mono text-sm text-primary">
-          <Terminal className="size-4" />
-          <span>{t.hero.tagline}</span>
-        </div>
+        <p className="mb-4 text-sm font-medium text-primary">{t.hero.tagline}</p>
 
-        <h1 className="font-mono text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-5xl">
           {t.hero.heading}
         </h1>
 
-        <p className="mt-4 max-w-lg font-mono text-lg text-muted-foreground">
+        <p className="mt-4 max-w-lg text-lg text-muted-foreground">
           {t.hero.description}
         </p>
 
@@ -79,12 +76,12 @@ export default async function Home({ params }: HomePageProps) {
       {posts.length > 0 && (
         <section className="border-t border-border/40 py-16">
           <div className="mb-8 flex items-end justify-between">
-            <h2 className="font-mono text-2xl font-bold text-foreground">
-              <span className="text-primary">#</span> {t.blog.latestPosts}
+            <h2 className="text-2xl font-bold text-foreground">
+              {t.blog.latestPosts}
             </h2>
             <Link
               href={`/${lang}/blog`}
-              className="group flex items-center gap-1 font-mono text-sm text-muted-foreground transition-colors hover:text-primary"
+              className="group flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary"
             >
               {t.blog.viewAll}
               <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />

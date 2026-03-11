@@ -124,7 +124,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
       {/* Header */}
       <header className="mb-8">
-        <h1 className="font-mono text-3xl font-bold leading-tight text-foreground sm:text-4xl">
+        <h1 className="text-3xl font-bold leading-tight text-foreground sm:text-4xl">
           {title}
         </h1>
 

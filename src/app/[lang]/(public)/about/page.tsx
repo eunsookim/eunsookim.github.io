@@ -66,9 +66,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
     <section className="mx-auto max-w-4xl px-4 py-10">
       {/* Page heading */}
       <div className="mb-10">
-        <h1 className="font-mono text-3xl font-bold text-primary">
-          <span className="text-muted-foreground">$</span> cat ./about.md
-        </h1>
+        <h1 className="text-3xl font-bold text-foreground">{t.about.title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {lang === "en" ? "Developer introduction page" : "개발자 소개 페이지"}
         </p>
@@ -76,9 +74,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
       {/* ── Introduction ── */}
       <div className="mb-12 rounded-lg border border-border bg-card p-6">
-        <h2 className="mb-4 font-mono text-lg font-semibold text-primary">
-          <span className="text-muted-foreground">#</span> whoami
-        </h2>
+        <h2 className="mb-4 text-lg font-semibold text-foreground">{lang === "en" ? "Introduction" : "소개"}</h2>
         {/* CUSTOMIZE: Replace this placeholder introduction */}
         <div className="space-y-3 text-sm leading-relaxed text-foreground/90">
           {lang === "en" ? (
@@ -117,9 +113,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
       {/* ── Skills / Tech Stack ── */}
       <div className="mb-12">
-        <h2 className="mb-6 font-mono text-lg font-semibold text-primary">
-          <span className="text-muted-foreground">#</span> ls ./skills
-        </h2>
+        <h2 className="mb-6 text-lg font-semibold text-foreground">{t.about.skills}</h2>
         {/* CUSTOMIZE: Update skill categories and items */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Object.entries(SKILLS).map(([category, items]) => (
@@ -127,16 +121,16 @@ export default async function AboutPage({ params }: AboutPageProps) {
               key={category}
               className="rounded-lg border border-border bg-card p-4"
             >
-              <h3 className="mb-3 font-mono text-sm font-semibold text-primary">
-                {category}/
+              <h3 className="mb-3 text-sm font-semibold text-primary">
+                {category}
               </h3>
               <ul className="space-y-1.5">
                 {items.map((skill) => (
                   <li
                     key={skill}
-                    className="font-mono text-xs text-muted-foreground"
+                    className="text-xs text-muted-foreground"
                   >
-                    <span className="mr-2 text-primary/60">-</span>
+                    <span className="mr-2 text-primary/60">•</span>
                     {skill}
                   </li>
                 ))}
@@ -148,9 +142,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
       {/* ── Contact ── */}
       <div className="mb-12">
-        <h2 className="mb-6 font-mono text-lg font-semibold text-primary">
-          <span className="text-muted-foreground">#</span> cat ./contact.json
-        </h2>
+        <h2 className="mb-6 text-lg font-semibold text-foreground">{t.about.contact}</h2>
         {/* CUSTOMIZE: Update contact links */}
         <div className="rounded-lg border border-border bg-card p-6">
           <div className="space-y-4">
@@ -169,10 +161,10 @@ export default async function AboutPage({ params }: AboutPageProps) {
                   className="flex items-center gap-3 text-sm text-muted-foreground transition-colors hover:text-primary"
                 >
                   <Icon className="size-4 shrink-0" />
-                  <span className="font-mono text-xs text-foreground/50">
+                  <span className="text-xs text-foreground/50">
                     {contact.label}:
                   </span>
-                  <span className="font-mono text-xs">{contact.value}</span>
+                  <span className="text-xs">{contact.value}</span>
                 </a>
               );
             })}
@@ -182,9 +174,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
       {/* ── Terminal-style footer ── */}
       <div className="border-t border-border pt-6 text-center">
-        <p className="font-mono text-xs text-muted-foreground">
-          <span className="text-primary">$</span> echo &quot;{lang === "en" ? "Thank you for reading!" : "읽어주셔서 감사합니다!"}&quot;
-        </p>
+        <p className="text-sm text-muted-foreground">{lang === "en" ? "Thank you for reading!" : "읽어주셔서 감사합니다!"}</p>
       </div>
     </section>
   );

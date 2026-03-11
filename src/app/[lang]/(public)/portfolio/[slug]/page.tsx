@@ -85,7 +85,7 @@ export default async function PortfolioDetailPage({
 
       {/* Header */}
       <header className="mb-8">
-        <h1 className="font-mono text-3xl font-bold leading-tight text-foreground sm:text-4xl">
+        <h1 className="text-3xl font-bold leading-tight text-foreground sm:text-4xl">
           {project.title}
         </h1>
 

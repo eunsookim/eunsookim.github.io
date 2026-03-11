@@ -89,9 +89,7 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
     <section className="mx-auto max-w-4xl px-4 py-10">
       {/* Page heading */}
       <div className="mb-8">
-        <h1 className="font-mono text-3xl font-bold text-primary">
-          <span className="text-muted-foreground">$</span> ls ./blog
-        </h1>
+        <h1 className="text-3xl font-bold text-foreground">{t.blog.title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {lang === "en" ? "Dev stories and tech notes" : "개발 이야기와 기술 노트"}
         </p>
@@ -128,9 +126,7 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
         </div>
       ) : (
         <div className="py-20 text-center">
-          <p className="font-mono text-muted-foreground">
-            <span className="text-primary">$</span> echo &quot;{t.blog.noResults}&quot;
-          </p>
+          <p className="text-muted-foreground">{t.blog.noResults}</p>
         </div>
       )}
 

@@ -29,9 +29,7 @@ export default async function EditPostPage({
     <div className="space-y-6">
       <div>
         <h1 className="font-mono text-2xl font-bold text-primary">글 수정</h1>
-        <p className="mt-1 font-mono text-sm text-muted-foreground">
-          <span className="text-primary">$</span> posts --edit &quot;{post.title}&quot;
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{post.title}</p>
       </div>
 
       <PostEditor

@@ -99,9 +99,7 @@ export default async function AdminDashboardPage() {
         <h1 className="font-mono text-2xl font-bold text-primary">
           Dashboard
         </h1>
-        <p className="mt-1 font-mono text-sm text-muted-foreground">
-          <span className="text-primary">$</span> system status --overview
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">시스템 현황</p>
       </div>
 
       {/* Stats grid */}

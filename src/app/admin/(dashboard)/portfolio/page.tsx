@@ -223,9 +223,7 @@ export default function AdminPortfolioPage() {
           <h1 className="font-mono text-2xl font-bold text-primary">
             Portfolio
           </h1>
-          <p className="mt-1 font-mono text-sm text-muted-foreground">
-            <span className="text-primary">$</span> projects --list --all
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">프로젝트 관리</p>
         </div>
         <Button onClick={openNewForm}>
           <PlusCircle className="size-4" />

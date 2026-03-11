@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Terminal } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -47,20 +47,17 @@ export default function AdminLoginPage() {
     <div className="flex min-h-[calc(100svh-8rem)] items-center justify-center px-4">
       <Card className="w-full max-w-sm border-primary/20">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-lg bg-primary/10">
-            <Terminal className="size-5 text-primary" />
-          </div>
-          <CardTitle className="font-mono text-xl text-primary">
-            Admin Login
+          <CardTitle className="text-xl text-primary">
+            관리자 로그인
           </CardTitle>
-          <CardDescription className="font-mono text-xs text-muted-foreground">
-            $ sudo authenticate --admin
+          <CardDescription className="text-xs text-muted-foreground">
+            이메일과 비밀번호를 입력하세요
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="email" className="font-mono text-xs">
+              <Label htmlFor="email" className="text-xs">
                 Email
               </Label>
               <Input
@@ -71,11 +68,10 @@ export default function AdminLoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
-                className="font-mono"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="password" className="font-mono text-xs">
+              <Label htmlFor="password" className="text-xs">
                 Password
               </Label>
               <Input
@@ -86,13 +82,12 @@ export default function AdminLoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
-                className="font-mono"
               />
             </div>
             <Button
               type="submit"
               disabled={isLoading}
-              className="mt-2 w-full font-mono"
+              className="mt-2 w-full"
             >
               {isLoading ? (
                 <>

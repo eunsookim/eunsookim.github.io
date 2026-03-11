@@ -39,9 +39,7 @@ export default async function AdminPostsPage({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-mono text-2xl font-bold text-primary">Posts</h1>
-          <p className="mt-1 font-mono text-sm text-muted-foreground">
-            <span className="text-primary">$</span> posts --list --all
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">글 목록 관리</p>
         </div>
         <Button render={<Link href="/admin/posts/new" />}>
           <PlusCircle className="size-4" />

@@ -87,10 +87,7 @@ export default async function SeriesPage({ params }: SeriesPageProps) {
       {/* Series heading */}
       <div className="mb-8">
         <p className="text-xs font-medium text-muted-foreground">{seriesLabel}</p>
-        <h1 className="font-mono text-3xl font-bold text-primary">
-          <span className="text-muted-foreground">$</span> cat ./series/
-          {seriesTitle}
-        </h1>
+        <h1 className="text-3xl font-bold text-foreground">{seriesTitle}</h1>
         {seriesDescription && (
           <p className="mt-2 text-sm text-muted-foreground">
             {seriesDescription}

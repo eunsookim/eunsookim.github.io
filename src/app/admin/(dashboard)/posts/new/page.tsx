@@ -18,9 +18,7 @@ export default async function NewPostPage() {
         <h1 className="font-mono text-2xl font-bold text-primary">
           새 글 작성
         </h1>
-        <p className="mt-1 font-mono text-sm text-muted-foreground">
-          <span className="text-primary">$</span> posts --new
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">새로운 글을 작성합니다</p>
       </div>
 
       <PostEditor categories={categories} seriesList={seriesList} />

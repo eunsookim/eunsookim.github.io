@@ -381,9 +381,7 @@ export default function AdminCategoriesPage() {
         <h1 className="font-mono text-2xl font-bold text-primary">
           Categories &amp; Series
         </h1>
-        <p className="mt-1 font-mono text-sm text-muted-foreground">
-          <span className="text-primary">$</span> taxonomy --manage
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">카테고리 및 시리즈 관리</p>
       </div>
 
       {/* Tabs */}

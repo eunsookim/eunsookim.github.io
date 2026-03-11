@@ -9,8 +9,8 @@ const messages = {
       about: "소개",
     },
     hero: {
-      tagline: "~/eunsookim.dev",
-      heading: "$ hello world_",
+      tagline: "개발자 김은수",
+      heading: "안녕하세요",
       description: "기술에 대한 생각과 의견, 그리고 배움을 기록하는 개발 블로그.",
       blogButton: "Blog 보기",
       portfolioButton: "Portfolio",
@@ -71,8 +71,8 @@ const messages = {
       about: "About",
     },
     hero: {
-      tagline: "~/eunsookim.dev",
-      heading: "$ hello world_",
+      tagline: "Developer Eunsoo Kim",
+      heading: "Hello",
       description: "A dev blog recording thoughts, opinions, and learnings about technology.",
       blogButton: "View Blog",
       portfolioButton: "Portfolio",

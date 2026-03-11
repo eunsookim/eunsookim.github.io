@@ -8,7 +8,6 @@ import {
   Briefcase,
   FolderTree,
   LogOut,
-  Terminal,
   Menu,
 } from "lucide-react";
 
@@ -58,11 +57,10 @@ function SidebarNav({
       <div className="flex h-14 items-center px-4">
         <Link
           href="/admin"
-          className="flex items-center gap-2 font-mono text-sm font-bold text-primary"
+          className="flex items-center gap-2 text-sm font-bold text-primary"
           onClick={onNavigate}
         >
-          <Terminal className="size-4" />
-          <span>admin panel</span>
+          Admin Panel
         </Link>
       </div>
 
@@ -79,7 +77,7 @@ function SidebarNav({
               href={item.href}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 font-mono text-sm transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
                 active
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -98,7 +96,7 @@ function SidebarNav({
       <div className="p-3">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 font-mono text-sm text-muted-foreground hover:text-destructive"
+          className="w-full justify-start gap-3 text-sm text-muted-foreground hover:text-destructive"
           onClick={handleLogout}
         >
           <LogOut className="size-4" />
@@ -142,10 +140,9 @@ export function AdminSidebar() {
         </Sheet>
         <Link
           href="/admin"
-          className="font-mono text-sm font-bold text-primary"
+          className="text-sm font-bold text-primary"
         >
-          <Terminal className="mr-2 inline-block size-4" />
-          admin panel
+          Admin Panel
         </Link>
       </div>
     </>
