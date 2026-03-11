@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import PostContent from "@/components/blog/post-content";
 import { SeriesNav } from "@/components/blog/series-nav";
 import { CommentSection } from "@/components/blog/comment-section";
+import { PostNavigation } from "@/components/blog/post-navigation";
 import {
   TableOfContents,
   extractTocItems,
@@ -43,6 +44,32 @@ async function getSeriesPosts(seriesId: string): Promise<Post[]> {
     .order("series_order", { ascending: true });
 
   return (posts ?? []) as Post[];
+}
+
+async function getPrevPost(publishedAt: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("posts")
+    .select("slug, title, title_en, published_at")
+    .eq("is_published", true)
+    .lt("published_at", publishedAt)
+    .order("published_at", { ascending: false })
+    .limit(1)
+    .single();
+  return data;
+}
+
+async function getNextPost(publishedAt: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("posts")
+    .select("slug, title, title_en, published_at")
+    .eq("is_published", true)
+    .gt("published_at", publishedAt)
+    .order("published_at", { ascending: true })
+    .limit(1)
+    .single();
+  return data;
 }
 
 export async function generateMetadata({
@@ -100,6 +127,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   // Fetch series posts if the post belongs to a series
   const seriesPosts =
     post.series_id && post.series ? await getSeriesPosts(post.series_id) : null;
+
+  // Fetch prev/next posts
+  const [prevPost, nextPost] = post.published_at
+    ? await Promise.all([
+        getPrevPost(post.published_at),
+        getNextPost(post.published_at),
+      ])
+    : [null, null];
 
   // Extract TOC items from markdown content
   const tocItems = content ? extractTocItems(content) : [];
@@ -204,6 +239,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               />
             </div>
           )}
+
+          {/* Post navigation */}
+          <PostNavigation prevPost={prevPost} nextPost={nextPost} lang={lang as Lang} />
 
           {/* Divider */}
           <hr className="my-10 border-border" />
