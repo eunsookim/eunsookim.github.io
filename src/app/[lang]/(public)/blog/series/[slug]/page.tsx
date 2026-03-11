@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Post, Series } from "@/lib/types";
 
 interface SeriesPageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ lang: string; slug: string }>;
 }
 
 async function getSeries(slug: string): Promise<Series | null> {
@@ -37,21 +37,25 @@ async function getSeriesPosts(seriesId: string): Promise<Post[]> {
 export async function generateMetadata({
   params,
 }: SeriesPageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { lang, slug } = await params;
   const series = await getSeries(slug);
 
   if (!series) {
-    return { title: "시리즈를 찾을 수 없습니다" };
+    return { title: lang === "en" ? "Series not found" : "시리즈를 찾을 수 없습니다" };
   }
 
+  const title = lang === "en" ? (series.title_en ?? series.title) : series.title;
+  const description = lang === "en" ? (series.description_en ?? series.description) : series.description;
+  const seriesLabel = lang === "en" ? "Series" : "시리즈";
+
   return {
-    title: `${series.title} — 시리즈`,
-    description: series.description ?? undefined,
+    title: `${title} — ${seriesLabel}`,
+    description: description ?? undefined,
   };
 }
 
 export default async function SeriesPage({ params }: SeriesPageProps) {
-  const { slug } = await params;
+  const { lang, slug } = await params;
   const series = await getSeries(slug);
 
   if (!series) {
@@ -60,31 +64,40 @@ export default async function SeriesPage({ params }: SeriesPageProps) {
 
   const posts = await getSeriesPosts(series.id);
 
+  const seriesTitle = lang === "en" ? (series.title_en ?? series.title) : series.title;
+  const seriesDescription = lang === "en" ? (series.description_en ?? series.description) : series.description;
+  const dateLocale = lang === "en" ? "en-US" : "ko-KR";
+  const seriesLabel = lang === "en" ? "Series" : "시리즈";
+  const totalPostsLabel =
+    lang === "en"
+      ? `${posts.length} post${posts.length !== 1 ? "s" : ""} total`
+      : `총 ${posts.length}개의 글`;
+
   return (
     <section className="mx-auto max-w-4xl px-4 py-10">
       {/* Back link */}
       <Link
-        href="/blog"
+        href={`/${lang}/blog`}
         className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
       >
         <span>&larr;</span>
-        <span>블로그 목록</span>
+        <span>{lang === "en" ? "Back to blog" : "블로그 목록"}</span>
       </Link>
 
       {/* Series heading */}
       <div className="mb-8">
-        <p className="text-xs font-medium text-muted-foreground">시리즈</p>
+        <p className="text-xs font-medium text-muted-foreground">{seriesLabel}</p>
         <h1 className="font-mono text-3xl font-bold text-primary">
           <span className="text-muted-foreground">$</span> cat ./series/
-          {series.title}
+          {seriesTitle}
         </h1>
-        {series.description && (
+        {seriesDescription && (
           <p className="mt-2 text-sm text-muted-foreground">
-            {series.description}
+            {seriesDescription}
           </p>
         )}
         <p className="mt-1 text-xs text-muted-foreground">
-          총 {posts.length}개의 글
+          {totalPostsLabel}
         </p>
       </div>
 
@@ -92,8 +105,9 @@ export default async function SeriesPage({ params }: SeriesPageProps) {
       {posts.length > 0 ? (
         <ol className="space-y-4">
           {posts.map((post) => {
+            const postTitle = lang === "en" ? (post.title_en ?? post.title) : post.title;
             const formattedDate = post.published_at
-              ? new Date(post.published_at).toLocaleDateString("ko-KR", {
+              ? new Date(post.published_at).toLocaleDateString(dateLocale, {
                   year: "numeric",
                   month: "long",
                   day: "numeric",
@@ -103,7 +117,7 @@ export default async function SeriesPage({ params }: SeriesPageProps) {
             return (
               <li key={post.id}>
                 <Link
-                  href={`/blog/${post.slug}`}
+                  href={`/${lang}/blog/${post.slug}`}
                   className="group flex gap-4 rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary/40"
                 >
                   {/* Order number */}
@@ -114,7 +128,7 @@ export default async function SeriesPage({ params }: SeriesPageProps) {
                   {/* Post info */}
                   <div className="min-w-0 flex-1">
                     <h2 className="font-mono text-base font-semibold text-foreground transition-colors group-hover:text-primary">
-                      {post.title}
+                      {postTitle}
                     </h2>
                     {post.excerpt && (
                       <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
@@ -138,8 +152,7 @@ export default async function SeriesPage({ params }: SeriesPageProps) {
       ) : (
         <div className="py-20 text-center">
           <p className="font-mono text-muted-foreground">
-            <span className="text-primary">$</span> echo &quot;이 시리즈에
-            게시글이 없습니다&quot;
+            <span className="text-primary">$</span> echo &quot;{lang === "en" ? "No posts in this series." : "이 시리즈에 게시글이 없습니다"}&quot;
           </p>
         </div>
       )}
