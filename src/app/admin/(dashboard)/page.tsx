@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileText, Briefcase, PlusCircle, FolderTree } from "lucide-react";
+import { FileText, Briefcase, PlusCircle, FolderTree, MessageSquare } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   Card,
@@ -8,30 +8,49 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { AdminRecentComments } from "@/components/admin/recent-comments";
 
 async function getStats() {
   const supabase = await createClient();
 
-  const [postsResult, publishedResult, projectsResult] = await Promise.all([
+  const [postsResult, publishedResult, projectsResult, commentsResult] = await Promise.all([
     supabase.from("posts").select("id", { count: "exact", head: true }),
     supabase
       .from("posts")
       .select("id", { count: "exact", head: true })
       .eq("is_published", true),
     supabase.from("projects").select("id", { count: "exact", head: true }),
+    supabase.from("comments").select("*", { count: "exact", head: true }),
   ]);
 
   const totalPosts = postsResult.count ?? 0;
   const publishedPosts = publishedResult.count ?? 0;
   const draftPosts = totalPosts - publishedPosts;
   const totalProjects = projectsResult.count ?? 0;
+  const totalComments = commentsResult.count ?? 0;
 
-  return { totalPosts, publishedPosts, draftPosts, totalProjects };
+  return { totalPosts, publishedPosts, draftPosts, totalProjects, totalComments };
+}
+
+async function getRecentComments() {
+  const supabase = await createClient();
+
+  const { data: comments } = await supabase
+    .from("comments")
+    .select("id, author_name, content, created_at, post_id, posts(title, slug)")
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  // Supabase returns the joined `posts` as an array; normalize to single object
+  return (comments ?? []).map((c) => ({
+    ...c,
+    posts: Array.isArray(c.posts) ? (c.posts[0] ?? null) : c.posts,
+  }));
 }
 
 export default async function AdminDashboardPage() {
-  const { totalPosts, publishedPosts, draftPosts, totalProjects } =
-    await getStats();
+  const [{ totalPosts, publishedPosts, draftPosts, totalProjects, totalComments }, recentComments] =
+    await Promise.all([getStats(), getRecentComments()]);
 
   const stats = [
     {
@@ -58,6 +77,12 @@ export default async function AdminDashboardPage() {
       icon: Briefcase,
       color: "text-chart-1",
     },
+    {
+      label: "Comments",
+      value: totalComments,
+      icon: MessageSquare,
+      color: "text-chart-3",
+    },
   ];
 
   const quickActions = [
@@ -80,7 +105,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Stats grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -121,6 +146,14 @@ export default async function AdminDashboardPage() {
             );
           })}
         </div>
+      </div>
+
+      {/* Recent comments */}
+      <div>
+        <h2 className="mb-4 font-mono text-sm font-medium text-muted-foreground">
+          최근 댓글
+        </h2>
+        <AdminRecentComments comments={recentComments} />
       </div>
     </div>
   );

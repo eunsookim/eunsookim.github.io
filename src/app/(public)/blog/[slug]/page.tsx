@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
 import PostContent from "@/components/blog/post-content";
 import { SeriesNav } from "@/components/blog/series-nav";
+import { CommentSection } from "@/components/blog/comment-section";
 import { createClient } from "@/lib/supabase/server";
 import type { Post, PostWithRelations } from "@/lib/types";
 
@@ -181,12 +182,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       {/* Divider */}
       <hr className="my-10 border-border" />
 
-      {/* Comments – will be replaced by CommentSection component */}
-      <section>
-        <h2 className="mb-4 font-mono text-lg font-semibold text-foreground">
-          <span className="text-muted-foreground">$</span> comments
-        </h2>
-      </section>
+      {/* Comments */}
+      <CommentSection postId={post.id} />
     </article>
   );
 }
