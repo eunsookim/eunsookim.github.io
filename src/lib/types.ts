@@ -17,6 +17,9 @@ export interface Post {
   tags: string[];
   created_at: string;
   updated_at: string;
+  title_en: string | null;
+  content_en: string | null;
+  excerpt_en: string | null;
 }
 
 export interface Project {
@@ -30,6 +33,8 @@ export interface Project {
   tech_stack: string[];
   created_at: string;
   updated_at: string;
+  title_en: string | null;
+  description_en: string | null;
 }
 
 export interface Category {
@@ -39,6 +44,8 @@ export interface Category {
   description: string | null;
   color: string | null;
   created_at: string;
+  name_en: string | null;
+  description_en: string | null;
 }
 
 export interface Series {
@@ -48,6 +55,8 @@ export interface Series {
   description: string | null;
   created_at: string;
   updated_at: string;
+  title_en: string | null;
+  description_en: string | null;
 }
 
 export interface PostWithRelations extends Post {
