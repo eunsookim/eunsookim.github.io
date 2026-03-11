@@ -283,6 +283,8 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
           title_en: titleEn.trim() || null,
           excerpt_en: excerptEn.trim() || null,
           content_en: contentEn || null,
+          status: publish ? 'published' : 'draft',
+          generated_by: 'human' as const,
           ...(publish && !post?.published_at
             ? { published_at: new Date().toISOString() }
             : {}),

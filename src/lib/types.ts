@@ -20,6 +20,11 @@ export interface Post {
   title_en: string | null;
   content_en: string | null;
   excerpt_en: string | null;
+  view_count: number;
+  like_count: number;
+  scheduled_at: string | null;
+  status: 'draft' | 'pending_review' | 'published' | 'scheduled';
+  generated_by: 'human' | 'ai' | null;
 }
 
 export interface Project {
@@ -76,4 +81,17 @@ export interface Comment {
 
 export interface CommentWithReplies extends Comment {
   replies: Comment[];
+}
+
+export interface ContentCalendar {
+  id: string;
+  scheduled_date: string;
+  topic: string;
+  category_slug: string | null;
+  tags: string[];
+  key_points: string[];
+  references: string[];
+  status: 'pending' | 'generated' | 'published' | 'skipped';
+  generated_post_id: string | null;
+  created_at: string;
 }
