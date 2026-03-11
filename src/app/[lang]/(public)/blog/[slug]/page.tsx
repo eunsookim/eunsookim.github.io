@@ -11,6 +11,7 @@ import { PostNavigation } from "@/components/blog/post-navigation";
 import { RelatedPosts } from "@/components/blog/related-posts";
 import { ViewCounter } from "@/components/blog/view-counter";
 import { ShareButtons } from "@/components/blog/share-buttons";
+import { LikeButton } from "@/components/blog/like-button";
 import {
   TableOfContents,
   extractTocItems,
@@ -248,12 +249,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </div>
             )}
 
-            {/* Share buttons */}
-            <div className="mt-4">
+            {/* Share & Like buttons */}
+            <div className="mt-4 flex items-center gap-2">
               <ShareButtons
                 url={`https://eunsookim.dev/${lang}/blog/${post.slug}`}
                 title={title}
               />
+              <LikeButton postId={post.id} initialCount={post.like_count} />
             </div>
           </header>
 
