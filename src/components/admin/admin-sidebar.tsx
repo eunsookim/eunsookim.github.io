@@ -7,6 +7,7 @@ import {
   FileText,
   Briefcase,
   FolderTree,
+  CalendarDays,
   LogOut,
   Menu,
 } from "lucide-react";
@@ -29,6 +30,7 @@ const navItems = [
   { href: "/admin/posts", label: "Posts", icon: FileText },
   { href: "/admin/portfolio", label: "Portfolio", icon: Briefcase },
   { href: "/admin/categories", label: "Categories", icon: FolderTree },
+  { href: "/admin/calendar", label: "Calendar", icon: CalendarDays },
 ];
 
 function isActive(pathname: string, href: string) {
