@@ -31,6 +31,8 @@ type ProjectForm = {
   title: string;
   slug: string;
   description: string;
+  title_en: string;
+  description_en: string;
   demo_url: string;
   github_url: string;
   tech_stack: string;
@@ -41,6 +43,8 @@ const emptyForm: ProjectForm = {
   title: "",
   slug: "",
   description: "",
+  title_en: "",
+  description_en: "",
   demo_url: "",
   github_url: "",
   tech_stack: "",
@@ -103,6 +107,8 @@ export default function AdminPortfolioPage() {
       title: project.title,
       slug: project.slug,
       description: project.description ?? "",
+      title_en: project.title_en ?? "",
+      description_en: project.description_en ?? "",
       demo_url: project.demo_url ?? "",
       github_url: project.github_url ?? "",
       tech_stack: project.tech_stack.join(", "),
@@ -149,6 +155,8 @@ export default function AdminPortfolioPage() {
       title: form.title.trim(),
       slug: form.slug.trim(),
       description: form.description.trim() || null,
+      title_en: form.title_en.trim() || null,
+      description_en: form.description_en.trim() || null,
       demo_url: form.demo_url.trim() || null,
       github_url: form.github_url.trim() || null,
       tech_stack: techStack,
@@ -313,6 +321,16 @@ export default function AdminPortfolioPage() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="project-title-en">Title (EN)</Label>
+              <Input
+                id="project-title-en"
+                value={form.title_en}
+                onChange={(e) => setForm((prev) => ({ ...prev, title_en: e.target.value }))}
+                placeholder="Project title in English"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="project-slug">슬러그</Label>
               <Input
                 id="project-slug"
@@ -336,6 +354,17 @@ export default function AdminPortfolioPage() {
                 }
                 placeholder="프로젝트에 대한 설명"
                 rows={4}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="project-desc-en">Description (EN)</Label>
+              <Textarea
+                id="project-desc-en"
+                value={form.description_en}
+                onChange={(e) => setForm((prev) => ({ ...prev, description_en: e.target.value }))}
+                placeholder="Project description in English"
+                rows={3}
               />
             </div>
 
