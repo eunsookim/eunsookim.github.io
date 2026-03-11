@@ -241,7 +241,7 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
           // Update existing post
           const { error } = await supabase
             .from("posts")
-            .update(payload)
+            .update({ ...payload, updated_at: new Date().toISOString() })
             .eq("id", post.id);
           if (error) throw error;
         } else {

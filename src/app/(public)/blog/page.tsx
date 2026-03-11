@@ -9,6 +9,11 @@ import type { Category, PostWithRelations } from "@/lib/types";
 
 const POSTS_PER_PAGE = 10;
 
+/** Escape special PostgREST pattern characters to prevent injection */
+function escapeSearchQuery(query: string): string {
+  return query.replace(/[%_\\]/g, "\\$&");
+}
+
 interface BlogPageProps {
   searchParams: Promise<{
     category?: string;
@@ -58,8 +63,9 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
 
   // Search by title or excerpt
   if (searchQuery) {
+    const escapedQuery = escapeSearchQuery(searchQuery);
     query = query.or(
-      `title.ilike.%${searchQuery}%,excerpt.ilike.%${searchQuery}%`,
+      `title.ilike.%${escapedQuery}%,excerpt.ilike.%${escapedQuery}%`,
     );
   }
 

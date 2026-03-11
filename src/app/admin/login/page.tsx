@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Terminal } from "lucide-react";
 
@@ -18,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function AdminLoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +37,10 @@ export default function AdminLoginPage() {
       return;
     }
 
-    router.push("/admin");
+    // Use hard navigation so the middleware can properly read the new auth
+    // cookies on the next request (router.push would use client-side nav
+    // and the middleware would not see the updated session).
+    window.location.href = "/admin";
   }
 
   return (

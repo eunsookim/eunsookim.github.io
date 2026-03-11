@@ -199,7 +199,7 @@ export default function AdminCategoriesPage() {
     if (editingCatId) {
       const { error } = await supabase
         .from("categories")
-        .update(payload)
+        .update({ ...payload, updated_at: new Date().toISOString() })
         .eq("id", editingCatId);
 
       if (error) {
@@ -307,7 +307,7 @@ export default function AdminCategoriesPage() {
     if (editingSeriesId) {
       const { error } = await supabase
         .from("series")
-        .update(payload)
+        .update({ ...payload, updated_at: new Date().toISOString() })
         .eq("id", editingSeriesId);
 
       if (error) {
@@ -371,14 +371,14 @@ export default function AdminCategoriesPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue={0}>
+      <Tabs defaultValue="categories">
         <TabsList>
-          <TabsTrigger value={0}>카테고리</TabsTrigger>
-          <TabsTrigger value={1}>시리즈</TabsTrigger>
+          <TabsTrigger value="categories">카테고리</TabsTrigger>
+          <TabsTrigger value="series">시리즈</TabsTrigger>
         </TabsList>
 
         {/* ---- Category Tab ---- */}
-        <TabsContent value={0} className="space-y-4 pt-4">
+        <TabsContent value="categories" className="space-y-4 pt-4">
           <div className="flex items-center justify-end">
             <Button onClick={openNewCatForm} size="sm">
               <PlusCircle className="size-4" />
@@ -442,7 +442,7 @@ export default function AdminCategoriesPage() {
         </TabsContent>
 
         {/* ---- Series Tab ---- */}
-        <TabsContent value={1} className="space-y-4 pt-4">
+        <TabsContent value="series" className="space-y-4 pt-4">
           <div className="flex items-center justify-end">
             <Button onClick={openNewSeriesForm} size="sm">
               <PlusCircle className="size-4" />

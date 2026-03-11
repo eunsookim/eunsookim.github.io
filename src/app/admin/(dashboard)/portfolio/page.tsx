@@ -160,7 +160,7 @@ export default function AdminPortfolioPage() {
     if (editingId) {
       const { error } = await supabase
         .from("projects")
-        .update(payload)
+        .update({ ...payload, updated_at: new Date().toISOString() })
         .eq("id", editingId);
 
       if (error) {

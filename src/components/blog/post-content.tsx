@@ -2,24 +2,67 @@ import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import rehypePrettyCode from "rehype-pretty-code";
-import rehypeSanitize from "rehype-sanitize";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import rehypeStringify from "rehype-stringify";
+
+// Extend the default sanitize schema to allow rehype-pretty-code attributes
+const sanitizeSchema = {
+  ...defaultSchema,
+  attributes: {
+    ...defaultSchema.attributes,
+    code: [
+      ...(defaultSchema.attributes?.code || []),
+      "data-language",
+      "data-theme",
+    ],
+    span: [
+      ...(defaultSchema.attributes?.span || []),
+      "data-line",
+      "style",
+      "class",
+    ],
+    pre: [
+      ...(defaultSchema.attributes?.pre || []),
+      "data-language",
+      "data-theme",
+      "style",
+      "class",
+    ],
+    div: [
+      ...(defaultSchema.attributes?.div || []),
+      "data-rehype-pretty-code-fragment",
+      "data-rehype-pretty-code-title",
+      "class",
+    ],
+    figure: [
+      ...(defaultSchema.attributes?.figure || []),
+      "data-rehype-pretty-code-figure",
+      "class",
+    ],
+    figcaption: [
+      ...(defaultSchema.attributes?.figcaption || []),
+      "data-rehype-pretty-code-title",
+      "class",
+    ],
+  },
+};
 
 interface PostContentProps {
   content: string;
 }
 
 async function processMarkdown(markdown: string): Promise<string> {
-  // Pipeline order: sanitize BEFORE pretty-code so syntax highlighting
-  // attributes (data-theme, style, span elements) are not stripped.
+  // Pipeline order: pretty-code BEFORE sanitize so that all HTML output from
+  // the syntax highlighter is properly sanitized. The custom sanitizeSchema
+  // allows the specific attributes that rehype-pretty-code adds.
   const result = await unified()
     .use(remarkParse)
     .use(remarkRehype)
-    .use(rehypeSanitize)
     .use(rehypePrettyCode, {
       theme: "one-dark-pro",
       keepBackground: true,
     })
+    .use(rehypeSanitize, sanitizeSchema)
     .use(rehypeStringify)
     .process(markdown);
 
