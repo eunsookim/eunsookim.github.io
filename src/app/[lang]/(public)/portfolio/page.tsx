@@ -3,17 +3,32 @@ import type { Metadata } from "next";
 import { ProjectCard } from "@/components/portfolio/project-card";
 import { createClient } from "@/lib/supabase/server";
 import type { Project } from "@/lib/types";
+import type { Lang } from "@/lib/i18n/utils";
+import { getMessages } from "@/lib/i18n/messages";
 
-export const metadata: Metadata = {
-  title: "Portfolio",
-  description: "프로젝트 포트폴리오 - 개발한 프로젝트들을 소개합니다.",
-  openGraph: {
-    title: "Portfolio | eunsookim.dev",
-    description: "프로젝트 포트폴리오 - 개발한 프로젝트들을 소개합니다.",
-  },
-};
+interface PortfolioPageProps {
+  params: Promise<{ lang: string }>;
+}
 
-export default async function PortfolioPage() {
+export async function generateMetadata({
+  params,
+}: PortfolioPageProps): Promise<Metadata> {
+  const { lang } = await params;
+  const t = getMessages(lang as Lang);
+  return {
+    title: t.portfolio.title,
+    description: t.portfolio.description,
+    openGraph: {
+      title: `${t.portfolio.title} | eunsookim.dev`,
+      description: t.portfolio.description,
+    },
+  };
+}
+
+export default async function PortfolioPage({ params }: PortfolioPageProps) {
+  const { lang } = await params;
+  const t = getMessages(lang as Lang);
+
   const supabase = await createClient();
 
   const { data: projects } = await supabase
@@ -31,7 +46,7 @@ export default async function PortfolioPage() {
           <span className="text-muted-foreground">$</span> ls ./portfolio
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          개발한 프로젝트들을 소개합니다
+          {t.portfolio.description}
         </p>
       </div>
 
@@ -39,14 +54,13 @@ export default async function PortfolioPage() {
       {typedProjects.length > 0 ? (
         <div className="grid gap-6 sm:grid-cols-2">
           {typedProjects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
+            <ProjectCard key={project.id} project={project} lang={lang as Lang} />
           ))}
         </div>
       ) : (
         <div className="py-20 text-center">
           <p className="font-mono text-muted-foreground">
-            <span className="text-primary">$</span> echo &quot;프로젝트가 아직
-            없습니다&quot;
+            <span className="text-primary">$</span> echo &quot;{t.portfolio.noProjects}&quot;
           </p>
         </div>
       )}
