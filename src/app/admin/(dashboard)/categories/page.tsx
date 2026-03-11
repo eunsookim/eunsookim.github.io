@@ -48,6 +48,8 @@ type CategoryForm = {
   name: string;
   slug: string;
   description: string;
+  name_en: string;
+  description_en: string;
   color: string;
 };
 
@@ -55,12 +57,16 @@ type SeriesForm = {
   title: string;
   slug: string;
   description: string;
+  title_en: string;
+  description_en: string;
 };
 
 const emptyCategoryForm: CategoryForm = {
   name: "",
   slug: "",
   description: "",
+  name_en: "",
+  description_en: "",
   color: "#22c55e",
 };
 
@@ -68,6 +74,8 @@ const emptySeriesForm: SeriesForm = {
   title: "",
   slug: "",
   description: "",
+  title_en: "",
+  description_en: "",
 };
 
 // ---------------------------------------------------------------------------
@@ -153,6 +161,8 @@ export default function AdminCategoriesPage() {
       name: cat.name,
       slug: cat.slug,
       description: cat.description ?? "",
+      name_en: cat.name_en ?? "",
+      description_en: cat.description_en ?? "",
       color: cat.color ?? "#22c55e",
     });
     setCatSlugManual(true);
@@ -191,6 +201,8 @@ export default function AdminCategoriesPage() {
       name: catForm.name.trim(),
       slug: catForm.slug.trim(),
       description: catForm.description.trim() || null,
+      name_en: catForm.name_en.trim() || null,
+      description_en: catForm.description_en.trim() || null,
       color: catForm.color || null,
     };
 
@@ -263,6 +275,8 @@ export default function AdminCategoriesPage() {
       title: s.title,
       slug: s.slug,
       description: s.description ?? "",
+      title_en: s.title_en ?? "",
+      description_en: s.description_en ?? "",
     });
     setSeriesSlugManual(true);
     setSeriesFormOpen(true);
@@ -300,6 +314,8 @@ export default function AdminCategoriesPage() {
       title: seriesForm.title.trim(),
       slug: seriesForm.slug.trim(),
       description: seriesForm.description.trim() || null,
+      title_en: seriesForm.title_en.trim() || null,
+      description_en: seriesForm.description_en.trim() || null,
     };
 
     const supabase = createClient();
@@ -529,6 +545,16 @@ export default function AdminCategoriesPage() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="cat-name-en">Name (EN)</Label>
+              <Input
+                id="cat-name-en"
+                value={catForm.name_en}
+                onChange={(e) => setCatForm((prev) => ({ ...prev, name_en: e.target.value }))}
+                placeholder="Category name in English"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="cat-slug">슬러그</Label>
               <Input
                 id="cat-slug"
@@ -552,6 +578,17 @@ export default function AdminCategoriesPage() {
                 }
                 placeholder="카테고리에 대한 설명 (선택)"
                 rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cat-desc-en">Description (EN)</Label>
+              <Textarea
+                id="cat-desc-en"
+                value={catForm.description_en}
+                onChange={(e) => setCatForm((prev) => ({ ...prev, description_en: e.target.value }))}
+                placeholder="Category description in English"
+                rows={2}
               />
             </div>
 
@@ -645,6 +682,16 @@ export default function AdminCategoriesPage() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="series-title-en">Title (EN)</Label>
+              <Input
+                id="series-title-en"
+                value={seriesForm.title_en}
+                onChange={(e) => setSeriesForm((prev) => ({ ...prev, title_en: e.target.value }))}
+                placeholder="Series title in English"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="series-slug">슬러그</Label>
               <Input
                 id="series-slug"
@@ -668,6 +715,17 @@ export default function AdminCategoriesPage() {
                 }
                 placeholder="시리즈에 대한 설명 (선택)"
                 rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="series-desc-en">Description (EN)</Label>
+              <Textarea
+                id="series-desc-en"
+                value={seriesForm.description_en}
+                onChange={(e) => setSeriesForm((prev) => ({ ...prev, description_en: e.target.value }))}
+                placeholder="Series description in English"
+                rows={2}
               />
             </div>
 

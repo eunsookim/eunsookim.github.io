@@ -95,7 +95,7 @@ export function PostMetaBar({
             <SelectItem value={NONE_VALUE}>없음</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat.id} value={cat.id}>
-                {cat.name}
+                {cat.name}{cat.name_en ? ` (${cat.name_en})` : ""}
               </SelectItem>
             ))}
           </SelectContent>
@@ -118,7 +118,7 @@ export function PostMetaBar({
             <SelectItem value={NONE_VALUE}>없음</SelectItem>
             {seriesList.map((s) => (
               <SelectItem key={s.id} value={s.id}>
-                {s.title}
+                {s.title}{s.title_en ? ` (${s.title_en})` : ""}
               </SelectItem>
             ))}
           </SelectContent>
