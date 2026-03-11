@@ -9,6 +9,7 @@ import { SeriesNav } from "@/components/blog/series-nav";
 import { CommentSection } from "@/components/blog/comment-section";
 import { PostNavigation } from "@/components/blog/post-navigation";
 import { ViewCounter } from "@/components/blog/view-counter";
+import { ShareButtons } from "@/components/blog/share-buttons";
 import {
   TableOfContents,
   extractTocItems,
@@ -213,6 +214,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 ))}
               </div>
             )}
+
+            {/* Share buttons */}
+            <div className="mt-4">
+              <ShareButtons
+                url={`https://eunsookim.dev/${lang}/blog/${post.slug}`}
+                title={title}
+              />
+            </div>
           </header>
 
           {/* Series navigation (top) */}
