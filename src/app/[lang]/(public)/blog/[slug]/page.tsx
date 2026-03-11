@@ -7,6 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import PostContent from "@/components/blog/post-content";
 import { SeriesNav } from "@/components/blog/series-nav";
 import { CommentSection } from "@/components/blog/comment-section";
+import {
+  TableOfContents,
+  extractTocItems,
+} from "@/components/blog/table-of-contents";
 import { createClient } from "@/lib/supabase/server";
 import type { Post, PostWithRelations } from "@/lib/types";
 import type { Lang } from "@/lib/i18n/utils";
@@ -97,8 +101,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const seriesPosts =
     post.series_id && post.series ? await getSeriesPosts(post.series_id) : null;
 
+  // Extract TOC items from markdown content
+  const tocItems = content ? extractTocItems(content) : [];
+
   return (
-    <article className="mx-auto max-w-3xl px-4 py-10">
+    <div className="mx-auto max-w-5xl px-4 py-10">
       {/* Back link */}
       <Link
         href={`/${lang}/blog`}
@@ -122,84 +129,96 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </div>
       )}
 
-      {/* Header */}
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold leading-tight text-foreground sm:text-4xl">
-          {title}
-        </h1>
+      {/* 2-column layout: content + TOC sidebar */}
+      <div className="lg:grid lg:grid-cols-[1fr_200px] lg:gap-8">
+        <article>
+          {/* Header */}
+          <header className="mb-8">
+            <h1 className="text-3xl font-bold leading-tight text-foreground sm:text-4xl">
+              {title}
+            </h1>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-          {formattedDate && (
-            <time dateTime={post.published_at!}>{formattedDate}</time>
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+              {formattedDate && (
+                <time dateTime={post.published_at!}>{formattedDate}</time>
+              )}
+
+              {post.category && (
+                <Link href={`/${lang}/blog?category=${post.category.slug}`}>
+                  <Badge
+                    variant="secondary"
+                    className="text-xs"
+                    style={
+                      post.category.color
+                        ? {
+                            backgroundColor: `${post.category.color}20`,
+                            color: post.category.color,
+                            borderColor: `${post.category.color}40`,
+                          }
+                        : undefined
+                    }
+                  >
+                    {categoryName}
+                  </Badge>
+                </Link>
+              )}
+            </div>
+
+            {/* Tags */}
+            {post.tags.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1">
+                {post.tags.map((tag) => (
+                  <Link key={tag} href={`/${lang}/blog?tag=${tag}`}>
+                    <Badge variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </header>
+
+          {/* Series navigation (top) */}
+          {post.series && seriesPosts && seriesPosts.length > 1 && (
+            <div className="mb-8">
+              <SeriesNav
+                series={post.series}
+                posts={seriesPosts}
+                currentPostId={post.id}
+                lang={lang as Lang}
+              />
+            </div>
           )}
 
-          {post.category && (
-            <Link href={`/${lang}/blog?category=${post.category.slug}`}>
-              <Badge
-                variant="secondary"
-                className="text-xs"
-                style={
-                  post.category.color
-                    ? {
-                        backgroundColor: `${post.category.color}20`,
-                        color: post.category.color,
-                        borderColor: `${post.category.color}40`,
-                      }
-                    : undefined
-                }
-              >
-                {categoryName}
-              </Badge>
-            </Link>
-          )}
-        </div>
+          {/* Post content */}
+          {content && <PostContent content={content} />}
 
-        {/* Tags */}
-        {post.tags.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1">
-            {post.tags.map((tag) => (
-              <Link key={tag} href={`/${lang}/blog?tag=${tag}`}>
-                <Badge variant="outline" className="text-xs">
-                  {tag}
-                </Badge>
-              </Link>
-            ))}
-          </div>
+          {/* Series navigation (bottom) */}
+          {post.series && seriesPosts && seriesPosts.length > 1 && (
+            <div className="mt-10">
+              <SeriesNav
+                series={post.series}
+                posts={seriesPosts}
+                currentPostId={post.id}
+                lang={lang as Lang}
+              />
+            </div>
+          )}
+
+          {/* Divider */}
+          <hr className="my-10 border-border" />
+
+          {/* Comments */}
+          <CommentSection postId={post.id} lang={lang as Lang} />
+        </article>
+
+        {/* TOC sidebar - only on desktop */}
+        {tocItems.length > 0 && (
+          <aside className="hidden lg:block">
+            <TableOfContents items={tocItems} />
+          </aside>
         )}
-      </header>
-
-      {/* Series navigation (top) */}
-      {post.series && seriesPosts && seriesPosts.length > 1 && (
-        <div className="mb-8">
-          <SeriesNav
-            series={post.series}
-            posts={seriesPosts}
-            currentPostId={post.id}
-            lang={lang as Lang}
-          />
-        </div>
-      )}
-
-      {/* Post content */}
-      {content && <PostContent content={content} />}
-
-      {/* Series navigation (bottom) */}
-      {post.series && seriesPosts && seriesPosts.length > 1 && (
-        <div className="mt-10">
-          <SeriesNav
-            series={post.series}
-            posts={seriesPosts}
-            currentPostId={post.id}
-            lang={lang as Lang}
-          />
-        </div>
-      )}
-
-      {/* Divider */}
-      <hr className="my-10 border-border" />
-
-      {/* Comments */}
-      <CommentSection postId={post.id} lang={lang as Lang} />
-    </article>
+      </div>
+    </div>
   );
 }

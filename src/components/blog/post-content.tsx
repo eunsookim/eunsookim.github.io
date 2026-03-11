@@ -1,6 +1,7 @@
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
+import rehypeSlug from "rehype-slug";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import rehypeStringify from "rehype-stringify";
@@ -44,6 +45,9 @@ const sanitizeSchema = {
       "data-rehype-pretty-code-title",
       "class",
     ],
+    h1: [...(defaultSchema.attributes?.h1 || []), "id"],
+    h2: [...(defaultSchema.attributes?.h2 || []), "id"],
+    h3: [...(defaultSchema.attributes?.h3 || []), "id"],
   },
 };
 
@@ -58,6 +62,7 @@ async function processMarkdown(markdown: string): Promise<string> {
   const result = await unified()
     .use(remarkParse)
     .use(remarkRehype)
+    .use(rehypeSlug)
     .use(rehypePrettyCode, {
       theme: "one-dark-pro",
       keepBackground: true,
