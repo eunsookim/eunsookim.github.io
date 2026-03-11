@@ -1,0 +1,186 @@
+"use client";
+
+import { useCallback, useState } from "react";
+import { X } from "lucide-react";
+
+import type { Category, Series } from "@/lib/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { ImageUpload } from "@/components/admin/image-upload";
+
+// Sentinel value for "none" since base-ui Select doesn't accept null as a value
+const NONE_VALUE = "__none__";
+
+interface PostMetaBarProps {
+  categories: Category[];
+  seriesList: Series[];
+  selectedCategoryId: string | null;
+  selectedSeriesId: string | null;
+  seriesOrder: number | null;
+  tags: string[];
+  coverImage: string | null;
+  imageFolder: string;
+  onCategoryChange: (id: string | null) => void;
+  onSeriesChange: (id: string | null) => void;
+  onSeriesOrderChange: (order: number | null) => void;
+  onTagsChange: (tags: string[]) => void;
+  onCoverImageChange: (url: string | null) => void;
+}
+
+export function PostMetaBar({
+  categories,
+  seriesList,
+  selectedCategoryId,
+  selectedSeriesId,
+  seriesOrder,
+  tags,
+  coverImage,
+  imageFolder,
+  onCategoryChange,
+  onSeriesChange,
+  onSeriesOrderChange,
+  onTagsChange,
+  onCoverImageChange,
+}: PostMetaBarProps) {
+  const [tagInput, setTagInput] = useState("");
+
+  const handleTagKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const value = tagInput.trim();
+        if (value && !tags.includes(value)) {
+          onTagsChange([...tags, value]);
+        }
+        setTagInput("");
+      }
+    },
+    [tagInput, tags, onTagsChange],
+  );
+
+  const handleRemoveTag = useCallback(
+    (tag: string) => {
+      onTagsChange(tags.filter((t) => t !== tag));
+    },
+    [tags, onTagsChange],
+  );
+
+  return (
+    <div className="space-y-4 rounded-lg border bg-card p-4">
+      <h3 className="font-mono text-sm font-medium text-muted-foreground">
+        메타 정보
+      </h3>
+
+      {/* Category Select */}
+      <div className="space-y-1.5">
+        <Label htmlFor="category-select">카테고리</Label>
+        <Select
+          value={selectedCategoryId ?? NONE_VALUE}
+          onValueChange={(val) =>
+            onCategoryChange(val === NONE_VALUE ? null : val)
+          }
+        >
+          <SelectTrigger className="w-full" id="category-select">
+            <SelectValue placeholder="카테고리 선택" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NONE_VALUE}>없음</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Series Select */}
+      <div className="space-y-1.5">
+        <Label htmlFor="series-select">시리즈</Label>
+        <Select
+          value={selectedSeriesId ?? NONE_VALUE}
+          onValueChange={(val) =>
+            onSeriesChange(val === NONE_VALUE ? null : val)
+          }
+        >
+          <SelectTrigger className="w-full" id="series-select">
+            <SelectValue placeholder="시리즈 선택" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NONE_VALUE}>없음</SelectItem>
+            {seriesList.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Series order — only visible when a series is selected */}
+        {selectedSeriesId && (
+          <div className="mt-2 space-y-1.5">
+            <Label htmlFor="series-order">시리즈 순서</Label>
+            <Input
+              id="series-order"
+              type="number"
+              min={1}
+              placeholder="순서 (예: 1)"
+              value={seriesOrder ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                onSeriesOrderChange(v === "" ? null : Number(v));
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Tags */}
+      <div className="space-y-1.5">
+        <Label htmlFor="tag-input">태그</Label>
+        <Input
+          id="tag-input"
+          placeholder="태그 입력 후 Enter"
+          value={tagInput}
+          onChange={(e) => setTagInput(e.target.value)}
+          onKeyDown={handleTagKeyDown}
+        />
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {tags.map((tag) => (
+              <Badge key={tag} variant="secondary" className="gap-1">
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveTag(tag)}
+                  className="ml-0.5 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                  aria-label={`${tag} 태그 삭제`}
+                >
+                  <X className="size-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Cover Image */}
+      <div className="space-y-1.5">
+        <Label>커버 이미지</Label>
+        <ImageUpload
+          folder={imageFolder}
+          onUpload={(url) => onCoverImageChange(url || null)}
+          currentImage={coverImage ?? undefined}
+        />
+      </div>
+    </div>
+  );
+}
