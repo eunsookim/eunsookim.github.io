@@ -54,3 +54,17 @@ export interface PostWithRelations extends Post {
   category?: Category | null;
   series?: Series | null;
 }
+
+export interface Comment {
+  id: string;
+  post_id: string;
+  parent_id: string | null;
+  author_name: string;
+  content: string;
+  created_at: string;
+  // password_hash and ip_address are NOT exposed to client
+}
+
+export interface CommentWithReplies extends Comment {
+  replies: Comment[];
+}
