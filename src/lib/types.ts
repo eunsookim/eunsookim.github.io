@@ -36,6 +36,7 @@ export interface Project {
   github_url: string | null;
   thumbnail: string | null;
   tech_stack: string[];
+  is_featured: boolean;
   created_at: string;
   updated_at: string;
   title_en: string | null;
