@@ -129,3 +129,38 @@
     @apply font-sans;
   }
 }
+
+/* Landing page utilities — @utility for Tailwind v4 variant support */
+@utility glass-card {
+  background: color-mix(in oklch, var(--foreground) 3%, transparent);
+  border: 1px solid color-mix(in oklch, var(--foreground) 8%, transparent);
+  backdrop-filter: blur(12px);
+
+  &:is(.dark *) {
+    background: color-mix(in oklch, var(--foreground) 5%, transparent);
+    border-color: color-mix(in oklch, var(--foreground) 10%, transparent);
+  }
+}
+
+@utility glow-primary {
+  box-shadow: 0 0 20px color-mix(in oklch, var(--primary) 30%, transparent);
+}
+
+@utility glow-primary-sm {
+  box-shadow: 0 0 10px color-mix(in oklch, var(--primary) 20%, transparent);
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@property --gradient-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes rotate-gradient {
+  to { --gradient-angle: 360deg; }
+}
