@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { PlusCircle, Trash2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import Link from "next/link";
+import { PlusCircle, Trash2, Loader2, ChevronDown, ChevronUp, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 import { createClient } from "@/lib/supabase/client";
@@ -470,6 +471,18 @@ function CalendarItemCard({
           )}
         </div>
         <div className="flex items-center gap-1">
+          {item.status === "generated" && item.generated_post_id && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              render={
+                <Link href={`/admin/posts/${item.generated_post_id}/edit`} />
+              }
+              title="초안 편집"
+            >
+              <Pencil className="size-4 text-primary" />
+            </Button>
+          )}
           {hasDetails && (
             <Button
               variant="ghost"
