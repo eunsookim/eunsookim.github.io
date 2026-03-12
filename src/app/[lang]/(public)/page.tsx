@@ -1,11 +1,15 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-
-import { PostCard } from "@/components/blog/post-card";
 import { createClient } from "@/lib/supabase/server";
-import type { PostWithRelations } from "@/lib/types";
+import type { PostWithRelations, Project } from "@/lib/types";
 import type { Lang } from "@/lib/i18n/utils";
 import { getMessages } from "@/lib/i18n/messages";
+
+import { ScrollProgress } from "@/components/landing/scroll-progress";
+import { HeroSection } from "@/components/landing/hero-section";
+import { GradientDivider } from "@/components/landing/gradient-divider";
+import { TechStackSection } from "@/components/landing/tech-stack-section";
+import { FeaturedProjectsSection } from "@/components/landing/featured-projects-section";
+import { LatestPostsSection } from "@/components/landing/latest-posts-section";
+import { FooterCtaSection } from "@/components/landing/footer-cta-section";
 
 async function getLatestPosts(): Promise<PostWithRelations[]> {
   try {
@@ -15,7 +19,7 @@ async function getLatestPosts(): Promise<PostWithRelations[]> {
       .select("*, category:categories(*)")
       .eq("is_published", true)
       .order("published_at", { ascending: false })
-      .limit(5);
+      .limit(3);
 
     if (error) {
       console.error("Failed to fetch posts:", error.message);
@@ -27,7 +31,33 @@ async function getLatestPosts(): Promise<PostWithRelations[]> {
       tags: post.tags ?? [],
     })) as PostWithRelations[];
   } catch {
-    // Supabase not connected or env vars missing — return empty
+    return [];
+  }
+}
+
+async function getFeaturedProjects(): Promise<Project[]> {
+  try {
+    const supabase = await createClient();
+
+    // Try featured first
+    const { data: featured } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("is_featured", true)
+      .order("created_at", { ascending: false })
+      .limit(3);
+
+    if (featured && featured.length > 0) return featured as Project[];
+
+    // Fallback to latest
+    const { data: latest } = await supabase
+      .from("projects")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(3);
+
+    return (latest ?? []) as Project[];
+  } catch {
     return [];
   }
 }
@@ -39,62 +69,38 @@ interface HomePageProps {
 export default async function Home({ params }: HomePageProps) {
   const { lang } = await params;
   const t = getMessages(lang as Lang);
-  const posts = await getLatestPosts();
+  const [posts, projects] = await Promise.all([
+    getLatestPosts(),
+    getFeaturedProjects(),
+  ]);
 
   return (
-    <div className="mx-auto max-w-4xl px-4">
-      {/* Hero Section */}
-      <section className="flex flex-col items-center justify-center py-24 text-center md:py-32">
-        <p className="mb-4 text-sm font-medium text-primary">{t.hero.tagline}</p>
+    <>
+      <ScrollProgress />
 
-        <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-          {t.hero.heading}
-        </h1>
+      <HeroSection lang={lang as Lang} t={t.landing} />
 
-        <p className="mt-4 max-w-lg text-lg text-muted-foreground">
-          {t.hero.description}
-        </p>
+      <GradientDivider />
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href={`/${lang}/blog`}
-            className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80"
-          >
-            {t.hero.blogButton}
-            <ArrowRight className="size-4" />
-          </Link>
-          <Link
-            href={`/${lang}/portfolio`}
-            className="inline-flex h-9 items-center rounded-lg border border-border bg-background px-5 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50"
-          >
-            {t.hero.portfolioButton}
-          </Link>
-        </div>
-      </section>
+      <TechStackSection title={t.landing.techStack} />
 
-      {/* Latest Posts Section */}
-      {posts.length > 0 && (
-        <section className="border-t border-border/40 py-16">
-          <div className="mb-8 flex items-end justify-between">
-            <h2 className="text-2xl font-bold text-foreground">
-              {t.blog.latestPosts}
-            </h2>
-            <Link
-              href={`/${lang}/blog`}
-              className="group flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary"
-            >
-              {t.blog.viewAll}
-              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
+      <GradientDivider />
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} lang={lang as Lang} />
-            ))}
-          </div>
-        </section>
-      )}
-    </div>
+      <FeaturedProjectsSection
+        lang={lang as Lang}
+        projects={projects}
+        t={t.landing}
+      />
+
+      <GradientDivider />
+
+      <LatestPostsSection
+        lang={lang as Lang}
+        posts={posts}
+        t={t.landing}
+      />
+
+      <FooterCtaSection t={t.landing} />
+    </>
   );
 }
