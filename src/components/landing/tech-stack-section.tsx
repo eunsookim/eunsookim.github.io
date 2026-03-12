@@ -81,7 +81,7 @@ function MagneticTechIcon({
     const cy = rect.top + rect.height / 2 - parentRect.top;
     const dx = mouseX - cx;
     const dy = mouseY - cy;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 0.001);
     const maxDist = 200;
     if (dist < maxDist) {
       const strength = (1 - dist / maxDist) * 6;
@@ -96,6 +96,7 @@ function MagneticTechIcon({
   return (
     <motion.div ref={ref} style={{ x: springX, y: springY }} className="group/tech relative">
       <GlassmorphismCard className="flex flex-col items-center gap-2 p-4">
+        {/* eslint-disable-next-line @next/next/no-img-element -- external SVG icons from CDN, no benefit from next/image optimization */}
         <img
           src={`https://cdn.simpleicons.org/${item.icon}`}
           alt={item.name}

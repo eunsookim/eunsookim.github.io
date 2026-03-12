@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 interface TypingAnimationProps {
@@ -19,10 +19,12 @@ export function TypingAnimation({
   const reduced = useReducedMotion();
   const [displayCount, setDisplayCount] = useState(text.length);
   const [started, setStarted] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mountedRef = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    mountedRef.current = true;
+    setHydrated(true);
     if (reduced) return;
     setDisplayCount(0);
 
@@ -43,6 +45,7 @@ export function TypingAnimation({
   }, [started, displayCount, text.length, speed, reduced]);
 
   const done = displayCount >= text.length;
+  const mounted = hydrated;
 
   return (
     <span className={className}>
