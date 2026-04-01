@@ -4,12 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Clock, ImagePlus, Languages, Loader2, Save, Send } from "lucide-react";
+import { CalendarIcon, Clock, ImagePlus, Languages, Loader2, Save, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import type { Post, Category, Series } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
-import { uploadImage } from "@/lib/firebase";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -50,6 +49,7 @@ interface DraftState {
   titleEn: string;
   excerptEn: string;
   contentEn: string;
+  publishedAt: string;
   savedAt: string;
 }
 
@@ -92,6 +92,17 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
   const [translating, setTranslating] = useState(false);
   const [editorTab, setEditorTab] = useState<"ko" | "en">("ko");
 
+  // Convert ISO string to datetime-local format (YYYY-MM-DDTHH:mm)
+  const toLocalDatetime = (iso: string | null) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const [publishedAt, setPublishedAt] = useState(
+    toLocalDatetime(post?.published_at ?? null),
+  );
   const [saving, setSaving] = useState(false);
   const [autoSavedAt, setAutoSavedAt] = useState<string | null>(null);
   const [showSchedule, setShowSchedule] = useState(false);
@@ -133,9 +144,36 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
 
   // ------ Image upload ------
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cursorPositionRef = useRef<number | null>(null);
+  // Ref to avoid re-creating textareaProps on every content change
+  const handleImageUploadRef = useRef<(file: File) => Promise<void>>(null!);
+
+  const editorTextareaProps = useMemo(
+    () => ({
+      onSelect: (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+        cursorPositionRef.current = e.currentTarget.selectionStart;
+      },
+      onBlur: (e: React.FocusEvent<HTMLTextAreaElement>) => {
+        cursorPositionRef.current = e.currentTarget.selectionStart;
+      },
+      onPaste: (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        const items = Array.from(e.clipboardData.items);
+        const imageItem = items.find((item) =>
+          item.type.startsWith("image/"),
+        );
+        if (imageItem) {
+          e.preventDefault();
+          e.stopPropagation();
+          const file = imageItem.getAsFile();
+          if (file) handleImageUploadRef.current(file);
+        }
+      },
+    }),
+    [],
+  );
 
   const handleImageUpload = useCallback(
-    async (file: File) => {
+    async (file: File): Promise<void> => {
       // Validate file type
       const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
       if (!validTypes.includes(file.type)) {
@@ -152,27 +190,44 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
       const setContentFn = editorTab === "ko" ? setContent : setContentEn;
       const currentContent = editorTab === "ko" ? content : contentEn;
 
-      // Add placeholder
+      // Insert placeholder at cursor position (or end if unknown)
       const placeholder = `![업로드 중...](uploading-${Date.now()})`;
-      setContentFn(currentContent + "\n" + placeholder);
+      const pos = cursorPositionRef.current ?? currentContent.length;
+      const before = currentContent.slice(0, pos);
+      const after = currentContent.slice(pos);
+      setContentFn(before + "\n" + placeholder + "\n" + after);
       markDirty();
 
       try {
-        const path = `blog/${slug || "draft"}/${Date.now()}-${file.name}`;
-        const url = await uploadImage(file, path);
+        const supabase = createClient();
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `blog/${slug || "draft"}/${Date.now()}-${safeName}`;
+
+        const { error } = await supabase.storage
+          .from("solvlog")
+          .upload(path, file);
+        if (error) throw error;
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("solvlog").getPublicUrl(path);
+
         // Replace placeholder with actual URL
         setContentFn((prev: string) =>
-          prev.replace(placeholder, `![${file.name}](${url})`),
+          prev.replace(placeholder, `![${file.name}](${publicUrl})`),
         );
         toast.success("이미지가 업로드되었습니다.");
-      } catch {
+      } catch (err) {
         // Remove placeholder on error
         setContentFn((prev: string) => prev.replace("\n" + placeholder, ""));
-        toast.error("이미지 업로드에 실패했습니다.");
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error("Image upload failed:", err);
+        toast.error(`이미지 업로드 실패: ${msg}`);
       }
     },
     [editorTab, content, contentEn, slug, markDirty],
   );
+  handleImageUploadRef.current = handleImageUpload;
 
   // ------ Translation ------
   const handleTranslate = useCallback(async () => {
@@ -236,6 +291,7 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
         if (draft.titleEn !== undefined) setTitleEn(draft.titleEn);
         if (draft.excerptEn !== undefined) setExcerptEn(draft.excerptEn);
         if (draft.contentEn !== undefined) setContentEn(draft.contentEn);
+        if (draft.publishedAt !== undefined) setPublishedAt(draft.publishedAt);
         // If slug was set, consider it manually edited
         if (draft.slug) slugManuallyEdited.current = true;
       }
@@ -264,6 +320,7 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
         titleEn,
         excerptEn,
         contentEn,
+        publishedAt,
         savedAt: new Date().toISOString(),
       };
       localStorage.setItem(draftKey(post?.id), JSON.stringify(draft));
@@ -284,6 +341,7 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
     titleEn,
     excerptEn,
     contentEn,
+    publishedAt,
     post?.id,
   ]);
 
@@ -309,6 +367,10 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
         toast.error("슬러그를 입력해주세요.");
         return;
       }
+      if (!categoryId) {
+        toast.error("카테고리를 선택해주세요.");
+        return;
+      }
 
       setSaving(true);
 
@@ -331,14 +393,14 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
           content_en: contentEn || null,
           status: publish ? 'published' : 'draft',
           generated_by: 'human' as const,
-          ...(publish && !post?.published_at
-            ? { published_at: new Date().toISOString() }
-            : {}),
+          published_at: publish
+            ? (publishedAt ? new Date(publishedAt).toISOString() : new Date().toISOString())
+            : (publishedAt ? new Date(publishedAt).toISOString() : null),
         };
 
         // TODO: When saving a new post with temp images, move images from
         // `temp/{uuid}/` to `blog/{slug}/`:
-        //   1. List files in temp folder via supabase.storage.from('assets').list(tempFolder)
+        //   1. List files in temp folder via supabase.storage.from('solvlog').list(tempFolder)
         //   2. Copy each file to `blog/{slug}/` path
         //   3. Delete originals from temp folder
         //   4. Update content markdown to replace temp URLs with new URLs
@@ -386,6 +448,7 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
       titleEn,
       excerptEn,
       contentEn,
+      publishedAt,
       post,
       router,
     ],
@@ -583,15 +646,6 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
                 const imageFile = files.find((f) => f.type.startsWith("image/"));
                 if (imageFile) handleImageUpload(imageFile);
               }}
-              onPaste={(e) => {
-                const items = Array.from(e.clipboardData.items);
-                const imageItem = items.find((item) => item.type.startsWith("image/"));
-                if (imageItem) {
-                  e.preventDefault();
-                  const file = imageItem.getAsFile();
-                  if (file) handleImageUpload(file);
-                }
-              }}
             >
               <MDEditor
                 value={content}
@@ -601,6 +655,7 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
                 }}
                 height={500}
                 preview="live"
+                textareaProps={editorTextareaProps}
               />
             </div>
           </div>
@@ -654,15 +709,6 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
                 const imageFile = files.find((f) => f.type.startsWith("image/"));
                 if (imageFile) handleImageUpload(imageFile);
               }}
-              onPaste={(e) => {
-                const items = Array.from(e.clipboardData.items);
-                const imageItem = items.find((item) => item.type.startsWith("image/"));
-                if (imageItem) {
-                  e.preventDefault();
-                  const file = imageItem.getAsFile();
-                  if (file) handleImageUpload(file);
-                }
-              }}
             >
               <MDEditor
                 value={contentEn}
@@ -672,11 +718,34 @@ export function PostEditor({ post, categories, seriesList }: PostEditorProps) {
                 }}
                 height={500}
                 preview="live"
+                textareaProps={editorTextareaProps}
               />
             </div>
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Published date (only for existing posts) */}
+      {post && (
+        <div className="flex items-center gap-3 rounded-lg border bg-card p-3">
+          <CalendarIcon className="size-4 shrink-0 text-muted-foreground" />
+          <div className="flex flex-1 items-center gap-2">
+            <Label htmlFor="published-at" className="shrink-0 text-xs text-muted-foreground">
+              발행일
+            </Label>
+            <input
+              id="published-at"
+              type="datetime-local"
+              value={publishedAt}
+              onChange={(e) => {
+                setPublishedAt(e.target.value);
+                markDirty();
+              }}
+              className="h-7 flex-1 rounded-md border border-input bg-background px-2 font-mono text-xs"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between border-t pt-4">

@@ -47,6 +47,11 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  --animate-spin-slow: spin-slow 1.5s linear infinite;
+  --animate-spin-reverse: spin-reverse 2s linear infinite;
+  --animate-pulse-dot: pulse-dot 1.5s ease-in-out infinite;
+  --animate-fade-text: fade-text 2s ease-in-out infinite;
 }
 
 :root {
@@ -130,6 +135,28 @@
   }
 }
 
+/* rehype-pretty-code line styles */
+[data-rehype-pretty-code-figure] pre {
+  padding: 0.75rem 0;
+}
+
+[data-rehype-pretty-code-figure] [data-line] {
+  padding: 0 1rem;
+  border-left: 2px solid transparent;
+}
+
+[data-rehype-pretty-code-figure] code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+[data-rehype-pretty-code-figure] code > [data-line]::before {
+  content: none;
+}
+
 /* Landing page utilities — @utility for Tailwind v4 variant support */
 @utility glass-card {
   background: color-mix(in oklch, var(--foreground) 3%, transparent);
@@ -163,4 +190,31 @@
 
 @keyframes rotate-gradient {
   to { --gradient-angle: 360deg; }
+}
+
+/* Loading: indeterminate progress bar */
+@keyframes progress-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+/* Loading: spinner rings */
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-reverse {
+  to { transform: rotate(-360deg); }
+}
+
+/* Loading: center dot pulse */
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+/* Loading: text fade */
+@keyframes fade-text {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
 }

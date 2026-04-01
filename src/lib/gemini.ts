@@ -31,5 +31,17 @@ JSON 형식으로 응답하세요:
 
   // JSON 파싱 (코드 블록 제거)
   const jsonStr = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-  return JSON.parse(jsonStr);
+
+  let parsed: { title?: string; content?: string; excerpt?: string; tags?: string[] };
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch {
+    throw new Error("Gemini 응답을 JSON으로 파싱할 수 없습니다.");
+  }
+
+  if (!parsed.title || !parsed.content || !parsed.excerpt || !Array.isArray(parsed.tags)) {
+    throw new Error("Gemini 응답에 필수 필드(title, content, excerpt, tags)가 누락되었습니다.");
+  }
+
+  return parsed as { title: string; content: string; excerpt: string; tags: string[] };
 }

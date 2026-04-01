@@ -32,7 +32,6 @@ const TECH_STACK: TechGroup[] = [
     label: "Backend",
     items: [
       { name: "Supabase", desc: "Open source Firebase alternative", icon: "supabase" },
-      { name: "Firebase", desc: "Google app development platform", icon: "firebase" },
       { name: "Node.js", desc: "JavaScript runtime", icon: "nodedotjs" },
       { name: "GraphQL", desc: "API query language", icon: "graphql" },
       { name: "PostgreSQL", desc: "Advanced open source RDBMS", icon: "postgresql" },

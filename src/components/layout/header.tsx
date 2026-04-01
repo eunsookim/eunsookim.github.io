@@ -93,7 +93,7 @@ export function Header({ lang }: HeaderProps) {
           href={`/${lang}`}
           className="font-mono text-lg font-bold tracking-tight text-primary transition-colors hover:text-primary/80"
         >
-          eunsookim.dev
+          Solvlog
         </Link>
 
         {/* Desktop Navigation */}

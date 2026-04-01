@@ -9,7 +9,7 @@ export interface Post {
   content: string | null;
   excerpt: string | null;
   cover_image: string | null;
-  category_id: string | null;
+  category_id: string;
   series_id: string | null;
   series_order: number | null;
   is_published: boolean;
@@ -52,6 +52,7 @@ export interface Category {
   created_at: string;
   name_en: string | null;
   description_en: string | null;
+  category_group: string | undefined;
 }
 
 export interface Series {
@@ -59,6 +60,7 @@ export interface Series {
   title: string;
   slug: string;
   description: string | null;
+  category_id: string;
   created_at: string;
   updated_at: string;
   title_en: string | null;

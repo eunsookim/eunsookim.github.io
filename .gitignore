@@ -43,3 +43,9 @@ next-env.d.ts
 
 # superpowers
 .superpowers/
+
+# supabase temp
+supabase/.temp/
+
+# gemini
+.gemini/

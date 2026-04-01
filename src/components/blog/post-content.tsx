@@ -9,6 +9,7 @@ import rehypeStringify from "rehype-stringify";
 // Extend the default sanitize schema to allow rehype-pretty-code attributes
 const sanitizeSchema = {
   ...defaultSchema,
+  clobberPrefix: "",
   attributes: {
     ...defaultSchema.attributes,
     code: [
@@ -19,14 +20,12 @@ const sanitizeSchema = {
     span: [
       ...(defaultSchema.attributes?.span || []),
       "data-line",
-      "style",
       "class",
     ],
     pre: [
       ...(defaultSchema.attributes?.pre || []),
       "data-language",
       "data-theme",
-      "style",
       "class",
     ],
     div: [
@@ -87,6 +86,7 @@ export default async function PostContent({ content }: PostContentProps) {
         prose-strong:text-foreground
         prose-code:text-primary prose-code:bg-muted prose-code:rounded prose-code:px-1.5 prose-code:py-0.5 prose-code:text-sm prose-code:before:content-none prose-code:after:content-none
         prose-pre:bg-[#282c34] prose-pre:border prose-pre:border-border prose-pre:rounded-lg
+        [&_pre_code]:text-inherit [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:rounded-none
         prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground
         prose-hr:border-border
         prose-th:text-foreground prose-td:text-foreground/90

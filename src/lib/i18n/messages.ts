@@ -41,6 +41,10 @@ const messages = {
       noResults: "게시글이 없습니다.",
       prev: "이전",
       next: "다음",
+      categoryGroupDev: "개발",
+      categoryGroupTalk: "잡담",
+      categoryGroupPortfolio: "포트폴리오",
+      categories: "카테고리",
     },
     portfolio: {
       title: "Portfolio",
@@ -57,6 +61,7 @@ const messages = {
     },
     series: {
       postsInSeries: "시리즈 목록",
+      seriesLabel: "시리즈",
     },
     comment: {
       title: "댓글",
@@ -73,7 +78,7 @@ const messages = {
       replyTo: "답글 작성",
     },
     footer: {
-      copyright: "© {year} eunsookim.dev. All rights reserved.",
+      copyright: "© {year} Solvlog. All rights reserved.",
     },
     lang: {
       toggle: "EN",
@@ -119,6 +124,10 @@ const messages = {
       noResults: "No posts found.",
       prev: "Previous",
       next: "Next",
+      categoryGroupDev: "Development",
+      categoryGroupTalk: "Misc",
+      categoryGroupPortfolio: "Portfolio",
+      categories: "Categories",
     },
     portfolio: {
       title: "Portfolio",
@@ -135,6 +144,7 @@ const messages = {
     },
     series: {
       postsInSeries: "Posts in this series",
+      seriesLabel: "Series",
     },
     comment: {
       title: "Comments",
@@ -151,7 +161,7 @@ const messages = {
       replyTo: "Write a reply",
     },
     footer: {
-      copyright: "© {year} eunsookim.dev. All rights reserved.",
+      copyright: "© {year} Solvlog. All rights reserved.",
     },
     lang: {
       toggle: "KO",

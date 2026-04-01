@@ -47,7 +47,7 @@ CREATE TABLE content_calendar (
   category_slug text,
   tags text[] DEFAULT '{}',
   key_points text[] DEFAULT '{}',
-  references text[] DEFAULT '{}',
+  "references" text[] DEFAULT '{}',
   status text NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'generated', 'published', 'skipped')),
   generated_post_id uuid REFERENCES posts(id),

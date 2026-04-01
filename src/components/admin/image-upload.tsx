@@ -54,14 +54,14 @@ export function ImageUpload({ folder, onUpload, currentImage }: ImageUploadProps
         const path = `${folder}/${timestamp}-${safeName}`;
 
         const { error } = await supabase.storage
-          .from("assets")
+          .from("solvlog")
           .upload(path, file);
 
         if (error) throw error;
 
         const {
           data: { publicUrl },
-        } = supabase.storage.from("assets").getPublicUrl(path);
+        } = supabase.storage.from("solvlog").getPublicUrl(path);
 
         setPreview(publicUrl);
         onUpload(publicUrl);

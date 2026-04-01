@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { X } from "lucide-react";
 
 import type { Category, Series } from "@/lib/types";
@@ -52,6 +52,44 @@ export function PostMetaBar({
 }: PostMetaBarProps) {
   const [tagInput, setTagInput] = useState("");
 
+  // Filter series by selected category
+  const filteredSeries = useMemo(
+    () =>
+      selectedCategoryId
+        ? seriesList.filter((s) => s.category_id === selectedCategoryId)
+        : seriesList,
+    [seriesList, selectedCategoryId],
+  );
+
+  // When series is selected, auto-set category
+  const handleSeriesChange = useCallback(
+    (id: string | null) => {
+      onSeriesChange(id);
+      if (id) {
+        const series = seriesList.find((s) => s.id === id);
+        if (series) {
+          onCategoryChange(series.category_id);
+        }
+      }
+    },
+    [seriesList, onSeriesChange, onCategoryChange],
+  );
+
+  // When category changes, clear series if it doesn't belong to the new category
+  const handleCategoryChange = useCallback(
+    (id: string | null) => {
+      onCategoryChange(id);
+      if (selectedSeriesId) {
+        const series = seriesList.find((s) => s.id === selectedSeriesId);
+        if (series && id && series.category_id !== id) {
+          onSeriesChange(null);
+          onSeriesOrderChange(null);
+        }
+      }
+    },
+    [selectedSeriesId, seriesList, onCategoryChange, onSeriesChange, onSeriesOrderChange],
+  );
+
   const handleTagKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter") {
@@ -73,6 +111,8 @@ export function PostMetaBar({
     [tags, onTagsChange],
   );
 
+  const isLockedBySeriesCategory = !!selectedSeriesId;
+
   return (
     <div className="space-y-4 rounded-lg border bg-card p-4">
       <h3 className="font-mono text-sm font-medium text-muted-foreground">
@@ -81,15 +121,24 @@ export function PostMetaBar({
 
       {/* Category Select */}
       <div className="space-y-1.5">
-        <Label htmlFor="category-select">카테고리</Label>
+        <Label htmlFor="category-select">카테고리 *</Label>
         <Select
           value={selectedCategoryId ?? NONE_VALUE}
           onValueChange={(val) =>
-            onCategoryChange(val === NONE_VALUE ? null : val)
+            handleCategoryChange(val === NONE_VALUE ? null : val)
           }
+          disabled={isLockedBySeriesCategory}
         >
           <SelectTrigger className="w-full" id="category-select">
-            <SelectValue placeholder="카테고리 선택" />
+            <SelectValue placeholder="카테고리 선택">
+              {(value: string) => {
+                if (value === NONE_VALUE || !value) return "없음";
+                const cat = categories.find((c) => c.id === value);
+                return cat
+                  ? `${cat.name}${cat.name_en ? ` (${cat.name_en})` : ""}`
+                  : value;
+              }}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={NONE_VALUE}>없음</SelectItem>
@@ -100,6 +149,11 @@ export function PostMetaBar({
             ))}
           </SelectContent>
         </Select>
+        {isLockedBySeriesCategory && (
+          <p className="text-xs text-muted-foreground">
+            시리즈의 카테고리가 자동 적용됩니다
+          </p>
+        )}
       </div>
 
       {/* Series Select */}
@@ -108,15 +162,23 @@ export function PostMetaBar({
         <Select
           value={selectedSeriesId ?? NONE_VALUE}
           onValueChange={(val) =>
-            onSeriesChange(val === NONE_VALUE ? null : val)
+            handleSeriesChange(val === NONE_VALUE ? null : val)
           }
         >
           <SelectTrigger className="w-full" id="series-select">
-            <SelectValue placeholder="시리즈 선택" />
+            <SelectValue placeholder="시리즈 선택">
+              {(value: string) => {
+                if (value === NONE_VALUE || !value) return "없음";
+                const s = seriesList.find((s) => s.id === value);
+                return s
+                  ? `${s.title}${s.title_en ? ` (${s.title_en})` : ""}`
+                  : value;
+              }}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={NONE_VALUE}>없음</SelectItem>
-            {seriesList.map((s) => (
+            {filteredSeries.map((s) => (
               <SelectItem key={s.id} value={s.id}>
                 {s.title}{s.title_en ? ` (${s.title_en})` : ""}
               </SelectItem>

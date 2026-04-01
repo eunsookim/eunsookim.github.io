@@ -1,29 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { TocItem } from "./toc-utils";
 
-export interface TocItem {
-  id: string;
-  text: string;
-  level: number;
-}
-
-export function extractTocItems(markdown: string): TocItem[] {
-  const headingRegex = /^(#{2,3})\s+(.+)$/gm;
-  const items: TocItem[] = [];
-  let match;
-  while ((match = headingRegex.exec(markdown)) !== null) {
-    const level = match[1].length;
-    const text = match[2].trim();
-    // Generate same ID as rehype-slug (lowercase, spaces to hyphens, remove special chars)
-    const id = text
-      .toLowerCase()
-      .replace(/[^\w\s가-힣-]/g, "")
-      .replace(/\s+/g, "-");
-    items.push({ id, text, level });
-  }
-  return items;
-}
+export type { TocItem };
+export { extractTocItems } from "./toc-utils";
 
 interface TableOfContentsProps {
   items: TocItem[];
@@ -57,8 +38,8 @@ export function TableOfContents({ items }: TableOfContentsProps) {
   if (items.length === 0) return null;
 
   return (
-    <nav className="hidden lg:block">
-      <div className="sticky top-24">
+    <nav>
+      <div>
         <p className="mb-3 text-sm font-semibold text-foreground">목차</p>
         <ul className="space-y-1 text-sm">
           {items.map((item) => (
